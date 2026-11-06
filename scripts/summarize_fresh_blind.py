@@ -34,7 +34,12 @@ def action_fpr_interval(left, right):
         if denominator:
             values.append(sum(grouped[key][1] for key in selected)/denominator)
     values.sort()
-    return {'delta_action_fpr_domain_bootstrap_95':[values[int(.025*(len(values)-1))],values[int(.975*(len(values)-1))]], 'valid_resamples':len(values), 'limitation':'percentile resampling cannot create unobserved false positives; zero endpoints do not prove safety'}
+    last = len(values) - 1
+    return {
+        'delta_action_fpr_domain_bootstrap_95': [values[int(.025 * last)], values[int(.975 * last)]],
+        'valid_resamples': len(values),
+        'limitation': 'The bootstrap reflects only false positives observed in this sample.',
+    }
 
 
 def summarize(directory):
@@ -93,35 +98,85 @@ def summarize(directory):
         tp = sum(r['label'] == 0 and r['action'] in ('hide','block') for r in rows)
         fp = sum(r['label'] == 1 and r['action'] in ('hide','block') for r in rows)
         report['models'][name] = {key:value[key] for key in ('state_schema','load_ms','warmup_ms','model_metadata','runtime')}
-        report['models'][name].update({'modes':{mode:{key:content for key,content in data.items() if key != 'rows'} for mode,data in value['modes'].items()}, 'primary_action_counts':{'true_ads':tp,'false_non_ads':fp,'ad_total':report['data']['ads'],'non_ad_total':report['data']['non_ads']}, 'action_fpr_wilson_95_candidate_independence':wilson(fp,report['data']['non_ads'])})
+        report['models'][name].update({
+            'modes': {
+                mode: {key: content for key, content in data.items() if key != 'rows'}
+                for mode, data in value['modes'].items()
+            },
+            'primary_action_counts': {
+                'true_ads': tp,
+                'false_non_ads': fp,
+                'ad_total': report['data']['ads'],
+                'non_ad_total': report['data']['non_ads'],
+            },
+            'action_fpr_wilson_95_candidate_independence': wilson(fp, report['data']['non_ads']),
+        })
         if name != 'rules':
             stats = paired_statistics(baseline, rows)
             stats.update(action_fpr_interval(baseline, rows))
             report['comparisons'][name] = stats
     output.write_text(json.dumps(report,indent=2),encoding='utf-8')
-    lines = ['# 新域名冻结人工盲测结果', '', '日期：2026-11-01。352条、36域名；广告69条、非广告283条。全部标签在推理前冻结，五候选与阈值未按结果调整，未自动部署。', '', '## 主比较：规则与普通级联', '', '| 候选 | 分类广告 TP / FP | 策略处理广告 | 动作误杀 | 覆盖率 | ECE | 模型调用 | 决策核心 P95 ms |', '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |']
+    lines = [
+        '# 新域名人工盲测',
+        '',
+        '2026-11-01。352 条人工标签来自 36 个域名，其中广告 69 条、非广告 283 条。推理前固定标签、候选和阈值。',
+        '',
+        '## 纯规则与普通级联',
+        '',
+        '| 候选 | 分类广告 TP / FP | 策略处理广告 | 动作误杀 | 覆盖率 | ECE | 模型调用 | 决策核心 P95 ms |',
+        '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ]
     for name, value in loaded.items():
         primary = value['modes']['rules_only' if name == 'rules' else 'rule_model_cascade']
         rows = primary['rows']
         tp = sum(r['label'] == 0 and r['prediction'] == 0 for r in rows)
         fp = sum(r['label'] == 1 and r['prediction'] == 0 for r in rows)
         counts = report['models'][name]['primary_action_counts']
-        lines.append(f"| {name} | {tp} / {fp} | {counts['true_ads']}/69 | {counts['false_non_ads']}/283 | {primary['coverage']:.4f} | {primary['ece_10_bin']:.4f} | {primary['routing']['model_calls']}/352 | {primary['latency_ms']['p95']:.3f} |")
-    lines += ['', '## 配对域名聚类区间', '', '10000次、种子42，所有候选与规则使用同一域名重采样。以下为每项比较的95%百分位区间；五项比较为描述性结果，没有多重比较调整，不能据此挑选最佳种子并声称确认性显著。', '', '| 候选 | 动作召回差值 | 95%区间 | 动作FPR差值95%区间 | 广告动作配对改善/退步 | 精确p |', '| --- | ---: | --- | --- | ---: | ---: |']
+        lines.append(
+            f"| {name} | {tp} / {fp} | {counts['true_ads']}/69 | {counts['false_non_ads']}/283 | "
+            f"{primary['coverage']:.4f} | {primary['ece_10_bin']:.4f} | "
+            f"{primary['routing']['model_calls']}/352 | {primary['latency_ms']['p95']:.3f} |"
+        )
+    lines += [
+        '', '## 配对域名聚类区间', '',
+        '候选和纯规则共用 10,000 次域名重采样，随机种子为 42。区间按每项比较分别计算，未做多重比较调整。',
+        '',
+        '| 候选 | 动作召回差值 | 95%区间 | 动作FPR差值95%区间 | 广告动作配对改善/退步 | 精确p |',
+        '| --- | ---: | --- | --- | ---: | ---: |',
+    ]
     for name, stats in report['comparisons'].items():
         action = stats['metrics']['page_action']
         interval = action['delta_recall_domain_bootstrap_95']
         fpr = stats['delta_action_fpr_domain_bootstrap_95']
         test = action['ad_recall_mcnemar']
-        lines.append(f"| {name} | {action['delta_recall']:.4f} | [{interval[0]:.4f}, {interval[1]:.4f}] | [{fpr[0]:.4f}, {fpr[1]:.4f}] | {test['improved']}/{test['regressed']} | {test['two_sided_exact_p']:.6g} |")
+        lines.append(
+            f"| {name} | {action['delta_recall']:.4f} | [{interval[0]:.4f}, {interval[1]:.4f}] | "
+            f"[{fpr[0]:.4f}, {fpr[1]:.4f}] | {test['improved']}/{test['regressed']} | "
+            f"{test['two_sided_exact_p']:.6g} |"
+        )
     lines += ['', '## 无规则证据的纯模型诊断', '', '| 候选 | 分类识别广告 | 策略处理广告 | 动作误杀 | 截断数 |', '| --- | ---: | ---: | ---: | ---: |']
     for name, value in loaded.items():
         if name == 'rules':
             continue
         diagnostic = value['modes']['model_only']
         rows = diagnostic['rows']
-        lines.append(f"| {name} | {sum(r['label']==0 and r['prediction']==0 for r in rows)}/69 | {sum(r['label']==0 and r['action'] in ('hide','block') for r in rows)}/69 | {sum(r['label']==1 and r['action'] in ('hide','block') for r in rows)}/283 | {diagnostic['truncated']} |")
-    lines += ['', '## 解释边界', '', '- 分类广告识别与最终页面动作分开；纯模型诊断不经过规则快速路径。', '- 耗时为预热后的串行单候选决策核心，不是浏览器整页或HTTP请求时间；没有缓存或批处理，另保存模型调用耗时与加载、预热耗时。', '- 候选级精确McNemar没有处理域名相关性，只作补充；域名区间不包含训练随机性。', '- 零误杀观察不代表风险为零；0/283的候选独立Wilson上界约1.34%，也不是域名聚类安全保证。', '- 样本来自混合候选采样与可访问的公开站点，不能外推全网拦截率，也不包含浏览器静态网络拦截的独立效果。', '- 评估器实现记录在标签冻结后、各模型推理前，原生schema和规则分流经过测试；这是执行实现时序披露，不伪称实现本身在采集前预注册。', '- 所有种子均报告，不自动选优或部署；此盲测若用于下一轮模型选择，将不再是后续版本的盲测。', '- 聚合JSON不含逐样本、域名、截图或本机路径；原始预测留在runs目录。', '']
+        classified_ads = sum(row['label'] == 0 and row['prediction'] == 0 for row in rows)
+        acted_ads = sum(row['label'] == 0 and row['action'] in ('hide', 'block') for row in rows)
+        acted_non_ads = sum(row['label'] == 1 and row['action'] in ('hide', 'block') for row in rows)
+        lines.append(
+            f"| {name} | {classified_ads}/69 | {acted_ads}/69 | {acted_non_ads}/283 | "
+            f"{diagnostic['truncated']} |"
+        )
+    lines += [
+        '', '## 测量口径', '',
+        '- 纯模型诊断绕过规则分流。分类结果和页面动作分别计数。',
+        '- 延迟只计预热后的单候选决策。HTTP、页面渲染和模型加载分别处理，评测使用串行推理，关闭缓存。',
+        '- 精确 McNemar 检验按候选配对，域名重采样区间反映站点抽样差异。按候选独立计算，0/283 误杀的 Wilson 上界约为 1.34%。',
+        '- 结果适用于这批公开站点候选。浏览器静态网络拦截另行测量。',
+        '- 评估器在标签冻结后、模型推理前完成并记录哈希。报告保留全部种子。若用于下一轮选模型，应另建盲测集。',
+        '- 逐样本预测和截图保存在本机 `runs/`，公开 JSON 只提供汇总。',
+        '',
+    ]
     (folder/'summary.md').write_text('\n'.join(lines),encoding='utf-8')
     print('\n'.join(lines))
 

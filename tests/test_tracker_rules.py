@@ -176,7 +176,7 @@ def test_cosmetic_rules_cover_adblock_tester_and_extreme_widgets() -> None:
 def test_popup_is_minimal() -> None:
     html = (ROOT / "browser/extension/popup.html").read_text(encoding="utf-8")
 
-    assert "JEV Ad Blocker" in html
+    assert "PagePrune" in html
     assert "点选并标记广告" in html
     assert "浏览器已发送" not in html
     assert "训练集样本" not in html

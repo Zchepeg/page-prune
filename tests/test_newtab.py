@@ -11,7 +11,7 @@ def test_new_tab_uses_minimal_surface() -> None:
 
     assert "<title>新标签页</title>" in html
     assert 'href="newtab-minimal.css"' in html
-    assert "JEV Ad Blocker" in html
+    assert "PagePrune" in html
     assert 'id="dot"' in html
     assert 'id="navigate"' in html
     assert 'id="destination"' in html

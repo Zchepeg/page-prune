@@ -1,0 +1,49 @@
+{
+  "advertising_network": {
+    "Google AdSense": ["pagead2.googlesyndication.com", "googleads.g.doubleclick.net"],
+    "Google Ad Manager": ["securepubads.g.doubleclick.net", "pubads.g.doubleclick.net"],
+    "Google Publisher Tag": ["googletagservices.com", "securepubads.g.doubleclick.net"],
+    "Amazon Ads": ["aax.amazon-adsystem.com", "c.amazon-adsystem.com"],
+    "Xandr (Microsoft)": ["ib.adnxs.com", "secure.adnxs.com"],
+    "Taboola": ["trc.taboola.com", "cdn.taboola.com"],
+    "Outbrain": ["widgets.outbrain.com", "log.outbrain.com"],
+    "Criteo": ["static.criteo.net", "bidder.criteo.com"],
+    "Media.net": ["contextual.media.net", "adservetx.media.net"],
+    "Yandex Ads": ["an.yandex.ru", "yandexadexchange.net", "adfox.yandex.ru"],
+    "Adblock benchmark custom ads": ["ymatuhin.ru"],
+    "High-risk popup and banner networks": ["12ezo5v60.com", "fvcwqkkqmuv.com", "ybs2ffs7v.com"]
+  },
+  "analytics": {
+    "Google Analytics": ["www.google-analytics.com", "analytics.google.com"],
+    "Google Tag Manager": ["www.googletagmanager.com"],
+    "Microsoft Clarity": ["www.clarity.ms", "c.clarity.ms"],
+    "Mixpanel": ["api-js.mixpanel.com", "api.mixpanel.com"],
+    "Amplitude": ["api2.amplitude.com", "cdn.amplitude.com"],
+    "Heap": ["cdn.heapanalytics.com", "heapanalytics.com"],
+    "HubSpot": ["js.hs-analytics.net", "track.hubspot.com"],
+    "Yandex Metrica": ["mc.yandex.ru", "metrika.yandex.ru"],
+    "Quantcast": ["pixel.quantserve.com", "secure.quantserve.com"],
+    "Comscore": ["sb.scorecardresearch.com", "b.scorecardresearch.com"],
+    "Sentry browser telemetry": ["browser.sentry-cdn.com", "js.sentry-cdn.com"]
+  },
+  "social_pixel": {
+    "Meta Pixel": ["connect.facebook.net", "www.facebook.com"],
+    "X Pixel": ["static.ads-twitter.com", "analytics.twitter.com"],
+    "TikTok Pixel": ["analytics.tiktok.com", "business-api.tiktok.com"],
+    "LinkedIn Insight": ["snap.licdn.com"],
+    "LinkedIn Conversion": ["px.ads.linkedin.com", "dc.ads.linkedin.com"],
+    "Pinterest Tag": ["s.pinimg.com", "ct.pinterest.com"],
+    "Snap Pixel": ["sc-static.net", "tr.snapchat.com"],
+    "Microsoft Advertising (Bing)": ["bat.bing.com"],
+    "Reddit Pixel": ["events.reddit.com", "alb.reddit.com"]
+  },
+  "session_recording": {
+    "Hotjar": ["script.hotjar.com", "insights.hotjar.com"],
+    "FullStory": ["edge.fullstory.com", "rs.fullstory.com"],
+    "LogRocket": ["cdn.logrocket.io", "r.lr-ingest.com"],
+    "Smartlook": ["web-sdk.smartlook.com", "manager.smartlook.cloud"],
+    "Lucky Orange": ["cdn.luckyorange.com", "upload.luckyorange.net"],
+    "Inspectlet": ["cdn.inspectlet.com", "hn.inspectlet.com"],
+    "Crazy Egg": ["script.crazyegg.com", "tracking.crazyegg.com"]
+  }
+}

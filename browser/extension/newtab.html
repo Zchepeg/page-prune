@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>新标签页</title>
+  <link rel="stylesheet" href="newtab-minimal.css">
+</head>
+<body>
+  <aside class="hot-topics" aria-labelledby="hot-heading">
+    <h2 id="hot-heading">今日热点</h2>
+    <p id="hot-status" role="status">正在加载热榜…</p>
+    <ol id="hot-list"></ol>
+  </aside>
+  <main class="minimal-newtab">
+    <header class="minimal-brand" aria-label="JEV Ad Blocker">
+      <span id="dot" class="ok" aria-hidden="true"></span>
+      <strong>JEV Ad Blocker</strong>
+    </header>
+    <form id="navigate" class="minimal-navigate" role="search">
+      <input id="destination" type="text" inputmode="url" autocomplete="off"
+        autofocus aria-label="输入网址或搜索内容" placeholder="输入网址或搜索内容">
+      <button type="submit">打开</button>
+    </form>
+    <section class="favorites" aria-labelledby="favorites-heading">
+      <h2 id="favorites-heading">我的收藏</h2>
+      <p id="favorites-status" role="status"></p>
+      <div id="favorites-content" hidden>
+        <nav id="favorites-path" aria-label="收藏夹路径"></nav>
+        <div id="favorites-tree"></div>
+        <div class="favorites-actions">
+          <button id="favorites-add" type="button" aria-controls="favorites-form" aria-expanded="false">新建文件夹</button>
+          <button id="favorites-add-link" type="button" aria-controls="favorites-form" aria-expanded="false">添加网址</button>
+        </div>
+        <form id="favorites-form" hidden>
+          <label>名称 <input id="favorites-name" required maxlength="200"></label>
+          <label id="favorites-url-label" hidden>网址 <input id="favorites-url" inputmode="url" placeholder="https://example.com"></label>
+          <button type="submit">保存</button>
+        </form>
+      </div>
+    </section>
+  </main>
+  <script src="newtab.js"></script>
+  <script src="newtab-favorites.js"></script>
+  <script src="newtab-hot.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Versioned Typed Question",
+  "type": "object",
+  "required": ["name", "text", "options", "version"],
+  "properties": {
+    "name": {"type": "string"},
+    "text": {"type": "string"},
+    "options": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "ad"}, {"const": "non_ad"}, {"const": "insufficient_evidence"}
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "version": {"type": "string"}
+  },
+  "additionalProperties": false
+}

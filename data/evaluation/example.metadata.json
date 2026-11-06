@@ -1,0 +1,7 @@
+{
+  "annotation_method": "synthetic_smoke",
+  "labels_frozen_before_evaluation": true,
+  "used_for_supervision": false,
+  "provenance": "Project-authored format and execution smoke cases",
+  "intended_use": "pipeline_validation_only"
+}

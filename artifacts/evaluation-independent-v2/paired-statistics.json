@@ -1,0 +1,199 @@
+{
+  "benchmark_sha256": "4781eef0b7ab652864c50736c45822596e2eafb90263207d52368fd94ecc31d4",
+  "prediction_report_sha256": "da585efb60fa900d336b012ec6914d823600109d50cbc72f434ce2a891e585d0",
+  "scope": "retrospective uncertainty analysis of historical frozen predictions, not new model evaluation",
+  "comparisons": {
+    "rule_model_cascade": {
+      "examples": 490,
+      "domains": 63,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 27,
+            "fp": 1,
+            "fn": 47,
+            "recall": 0.36486486486486486,
+            "f1": 0.5294117647058824
+          },
+          "candidate": {
+            "tp": 28,
+            "fp": 3,
+            "fn": 46,
+            "recall": 0.3783783783783784,
+            "f1": 0.5333333333333333
+          },
+          "baseline_recall_wilson_95": [
+            0.2643856429286271,
+            0.47868186501634213
+          ],
+          "candidate_recall_wilson_95": [
+            0.2764753469106077,
+            0.4922854102398646
+          ],
+          "delta_recall": 0.013513513513513542,
+          "delta_f1": 0.0039215686274509665,
+          "delta_recall_domain_bootstrap_95": [
+            0.0,
+            0.047058823529411764
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            -0.02450592885375491,
+            0.04627601314348301
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 1,
+            "regressed": 0,
+            "two_sided_exact_p": 1.0
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 27,
+            "fp": 1,
+            "fn": 47,
+            "recall": 0.36486486486486486,
+            "f1": 0.5294117647058824
+          },
+          "candidate": {
+            "tp": 28,
+            "fp": 1,
+            "fn": 46,
+            "recall": 0.3783783783783784,
+            "f1": 0.5436893203883495
+          },
+          "baseline_recall_wilson_95": [
+            0.2643856429286271,
+            0.47868186501634213
+          ],
+          "candidate_recall_wilson_95": [
+            0.2764753469106077,
+            0.4922854102398646
+          ],
+          "delta_recall": 0.013513513513513542,
+          "delta_f1": 0.014277555682467136,
+          "delta_recall_domain_bootstrap_95": [
+            0.0,
+            0.047058823529411764
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.0,
+            0.05508072174738843
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 1,
+            "regressed": 0,
+            "two_sided_exact_p": 1.0
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 68,
+        "regressed": 0,
+        "two_sided_exact_p": 6.776263578034403e-21,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      }
+    },
+    "jev_ad_protocol": {
+      "examples": 490,
+      "domains": 63,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 27,
+            "fp": 1,
+            "fn": 47,
+            "recall": 0.36486486486486486,
+            "f1": 0.5294117647058824
+          },
+          "candidate": {
+            "tp": 28,
+            "fp": 3,
+            "fn": 46,
+            "recall": 0.3783783783783784,
+            "f1": 0.5333333333333333
+          },
+          "baseline_recall_wilson_95": [
+            0.2643856429286271,
+            0.47868186501634213
+          ],
+          "candidate_recall_wilson_95": [
+            0.2764753469106077,
+            0.4922854102398646
+          ],
+          "delta_recall": 0.013513513513513542,
+          "delta_f1": 0.0039215686274509665,
+          "delta_recall_domain_bootstrap_95": [
+            0.0,
+            0.047058823529411764
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            -0.02450592885375491,
+            0.04627601314348301
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 1,
+            "regressed": 0,
+            "two_sided_exact_p": 1.0
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 27,
+            "fp": 1,
+            "fn": 47,
+            "recall": 0.36486486486486486,
+            "f1": 0.5294117647058824
+          },
+          "candidate": {
+            "tp": 28,
+            "fp": 1,
+            "fn": 46,
+            "recall": 0.3783783783783784,
+            "f1": 0.5436893203883495
+          },
+          "baseline_recall_wilson_95": [
+            0.2643856429286271,
+            0.47868186501634213
+          ],
+          "candidate_recall_wilson_95": [
+            0.2764753469106077,
+            0.4922854102398646
+          ],
+          "delta_recall": 0.013513513513513542,
+          "delta_f1": 0.014277555682467136,
+          "delta_recall_domain_bootstrap_95": [
+            0.0,
+            0.047058823529411764
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.0,
+            0.05508072174738843
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 1,
+            "regressed": 0,
+            "two_sided_exact_p": 1.0
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 68,
+        "regressed": 0,
+        "two_sided_exact_p": 6.776263578034403e-21,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      }
+    }
+  }
+}

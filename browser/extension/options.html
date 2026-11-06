@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JEV Ad Blocker 安全设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <h1>JEV Ad Blocker 安全设置</h1>
+    <p id="status">正在检查本地服务…</p>
+    <form id="pairing">
+      <label for="code">终端中显示的一次性配对码</label>
+      <div><input id="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required><button>配对</button></div>
+    </form>
+    <p class="hint">配对码有效期为 10 分钟。扩展弹窗保持原有简洁界面。</p>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

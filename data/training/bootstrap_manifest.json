@@ -1,0 +1,31 @@
+{
+  "created_at": "2026-10-08T12:59:52.687042+00:00",
+  "seed": 20261008,
+  "sources": {
+    "data\\sources\\easylist.txt": "a4dad51ab81ec5c4cca322307bf439d8d80141ccc4c71353ef378bf889d91598",
+    "data\\sources\\adguard-base.txt": "1ec24852e9534c92c0d3978146bcabf588b19e332ab43837d55f0f509427a707",
+    "data\\sources\\tranco_top_500.txt": "b86428920a447c026100d560d8001c5df0fe58bdc082fa935514fbb9d0305acb"
+  },
+  "extracted_ad_hosts": 61233,
+  "training": {
+    "path": "data/training/bootstrap_train.jsonl",
+    "examples": 450,
+    "labels": {
+      "2": 150,
+      "1": 150,
+      "0": 150
+    },
+    "domains": 375
+  },
+  "calibration": {
+    "path": "data/training/calibration.jsonl",
+    "examples": 90,
+    "labels": {
+      "1": 30,
+      "2": 30,
+      "0": 30
+    },
+    "domains": 90
+  },
+  "domain_overlap": []
+}

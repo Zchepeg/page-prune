@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.jev-ad-block/benchmark.schema.json",
+  "title": "JEV-Ad benchmark record",
+  "type": "object",
+  "required": ["id", "domain", "label", "candidate"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "domain": {"type": "string", "minLength": 1},
+    "label": {"enum": ["ad", "non_ad", "insufficient_evidence", 0, 1, 2]},
+    "candidate": {"$ref": "state_schema.json"},
+    "probe": {"$ref": "probe_schema.json"}
+  },
+  "additionalProperties": false
+}

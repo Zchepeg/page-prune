@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.13"]
+    runs-on: ${{ matrix.os }}
+    env:
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            requirements-baseline.txt
+            requirements-test.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/smoke_public_runtime.py
+      - run: python -m pip install torch==2.8.0+cpu --index-url https://download.pytorch.org/whl/cpu
+      - run: python -m pip install -r requirements-test.txt
+      - run: python -m pip check
+      - run: python -m pytest -p no:cacheprovider --basetemp=${{ runner.temp }}/jev-pytest
+      - run: node --check browser/extension/background.js
+      - run: node --check browser/extension/content.js
+      - run: node --check browser/extension/newtab.js
+      - run: node --check browser/extension/newtab-favorites.js
+      - run: node --check browser/extension/newtab-hot.js
+      - run: node --check browser/extension/popup.js
+      - run: node --check browser/extension/options.js
+      - run: node --check browser/extension/probe.js
+      - run: node --check browser/extension/privacy_guard.js

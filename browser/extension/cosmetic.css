@@ -1,0 +1,111 @@
+/* Synchronous, high-confidence cosmetic filtering.
+ * This file intentionally avoids broad substring selectors such as [class*="ad"].
+ * Ambiguous elements remain the responsibility of the local JEV decision service.
+ */
+#abBait,
+#testBait,
+#ad,
+.ab-bait,
+.adsbox,
+.ad-banner,
+.ad-banner-top,
+.banner-ad,
+.banner_ads,
+.ad-placement,
+.ad-placeholder,
+.ad-container,
+.ad-slot,
+.ad-box,
+.ad-wrap,
+.ad-wrapper,
+.ad-block,
+.ad_unit,
+.ad-unit,
+.google-ad,
+.sidebar-ad,
+.pub_300x250,
+.pub_300x250m,
+.pub_728x90,
+.text-ad,
+.textads,
+.text_ad,
+.text-ads,
+.text_ads,
+.sponsored-ad,
+.sponsored_ad,
+.sponsored-content,
+.sponsored-post,
+.sponsored-links,
+.adsbygoogle,
+.adsbygoogle-noablate,
+[data-bait=".adsbygoogle2"],
+[data-ads],
+[id^="yandex_rtb_"],
+object[data*="/banners/pr_advertising_ads_banner"],
+embed[src*="/banners/pr_advertising_ads_banner"],
+img[src*="/banners/pr_advertising_ads_banner"],
+a[href="ad.com"],
+.dynamic-ad,
+.interactive-ad,
+.expandable-ad,
+.rich-media-ad-container,
+.video-ad-container,
+.player-ad-wrapper,
+.ad-video-slot,
+.ima-ad-container,
+.interstitial-ad,
+.fullscreen-ad,
+.ad-overlay,
+.popup-ad,
+.modal-ad,
+.social-feed-ad,
+.feed-ad,
+.mobile-ad-banner,
+.mobile-banner,
+.sticky-ad-container,
+.anchor-ad,
+.sticky-footer-ad,
+.bottom-ad-unit,
+.native-content-ad-container,
+.OUTBRAIN,
+.TRC_RelatedList,
+.textAd,
+.text-advertisement,
+.google-text-ad,
+.affiliate-link-container,
+.affiliate-ad,
+.partner-links,
+.floating-ad,
+.video-overlay-ad,
+.deceptive-ad,
+.redirect-test,
+.anti-adblock-test {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* These test containers deliberately give their bait a high-specificity
+ * display rule.  The selectors remain tied to ad semantics while ensuring the
+ * page rule cannot restore the element after extension CSS has hidden it. */
+#abt-baits > .adsbygoogle,
+#abt-baits > .adsbygoogle-noablate,
+#abt-baits > [data-bait=".adsbygoogle2"],
+#abt-baits > #ad,
+#adblock-bait.adsbox,
+[data-abb-bait].adsbygoogle,
+[data-abb-bait].ad-placement,
+[data-abb-bait][data-ad-type] {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Keep relational selectors isolated: an engine that cannot parse :has()
+ * must not discard the main cosmetic rule above. */
+.elementor-widget-html:has(script[src*="12ezo5v60.com"]),
+.elementor-widget-html:has(script[src*="fvcwqkkqmuv.com"]),
+.elementor-widget-html:has(script[src*="ybs2ffs7v.com"]) {
+  display: none !important;
+  visibility: hidden !important;
+}

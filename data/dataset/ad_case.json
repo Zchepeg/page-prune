@@ -1,0 +1,18 @@
+[
+  {
+    "candidate_id": "example-ad-1",
+    "page": {"url": "https://example.test/article", "title": "Example", "top_level_domain": "example.test"},
+    "tag": "IFRAME",
+    "text": "Sponsored",
+    "html": "<iframe class=\"sponsored-banner\"></iframe>",
+    "element_id": "top-ad",
+    "classes": ["sponsored-banner"],
+    "attributes": {},
+    "resource_urls": ["https://ads.doubleclick.net/banner"],
+    "width": 728,
+    "height": 90,
+    "fixed": false,
+    "visible": true,
+    "label": "block"
+  }
+]

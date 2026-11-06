@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JEV 样本复核</title>
+  <style>
+    :root{color-scheme:light dark;font-family:system-ui,sans-serif}body{max-width:980px;margin:28px auto;padding:0 18px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}h1{font-size:24px;margin:0}h2{font-size:18px;margin:28px 0 8px}.summary{color:#777;margin:4px 0 20px}.section-title{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #8884}button{padding:8px 12px;border:0;border-radius:7px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}article{border:1px solid #8885;border-radius:12px;padding:16px;margin:14px 0}.domain{font-size:17px;font-weight:650;margin-bottom:8px}.meta{display:flex;gap:12px;flex-wrap:wrap;color:#777;font-size:13px}.evidence{margin:10px 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.ad{background:#c62828;color:#fff}.safe{background:#2e7d32;color:#fff}.unknown{background:#616161;color:#fff}.skip{background:#7772}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#8881;padding:10px;border-radius:8px;max-height:260px;overflow:auto}.empty{text-align:center;color:#777;margin:28px 0}.error{color:#c62828}.badge{display:inline-block;padding:2px 7px;border-radius:999px;background:#8882;font-size:12px}
+  </style>
+</head>
+<body>
+  <header><h1>JEV 样本复核</h1><button id="refresh">刷新</button></header>
+  <p id="summary" class="summary">正在读取待复核样本…</p>
+  <section>
+    <div class="section-title"><h2>浏览器候选</h2><span id="candidate-count" class="badge">0</span></div>
+    <main id="candidates"></main>
+  </section>
+  <section>
+    <div class="section-title"><h2>SSA 探针</h2><span id="probe-count" class="badge">0</span></div>
+    <main id="probes"></main>
+  </section>
+  <script>
+    const candidates=document.querySelector("#candidates");
+    const probes=document.querySelector("#probes");
+    const summary=document.querySelector("#summary");
+    function empty(text){const value=document.createElement("p");value.className="empty";value.textContent=text;return value}
+    function button(text,className,handler){const value=document.createElement("button");value.textContent=text;value.className=className;value.onclick=handler;return value}
+    function actions(resolve,article){const row=document.createElement("div");row.className="actions";[[0,"广告","ad"],[1,"非广告","safe"],[2,"证据不足","unknown"]].forEach(([label,text,className])=>row.append(button(text,className,()=>resolve(label,article,row))));row.append(button("暂时跳过","skip",()=>{article.remove();updateCounts()}));return row}
+    function candidateCard(value){
+      const article=document.createElement("article");const state=value.state||{};const provenance=value.provenance||{};
+      const domain=document.createElement("div");domain.className="domain";domain.textContent=value.source||"未知域名";
+      const meta=document.createElement("div");meta.className="meta";meta.textContent=`${state.tag||""} · ${provenance.selection_reason||"未记录来源"} · 规则分数 ${provenance.score??""} · 模型 ${provenance.model_verdict||"未调用"}`;
+      const evidence=document.createElement("div");evidence.className="evidence";evidence.textContent=`证据：${(provenance.evidence||[]).join("、")||"无"}`;
+      const details=document.createElement("pre");details.textContent=JSON.stringify({text:state.text||"",element_id:state.element_id||"",classes:state.classes||[],attributes:state.attributes||{},resource_urls:state.resource_urls||[],geometry:state.geometry||[],fixed:Boolean(state.fixed),visible:Boolean(state.visible)},null,2);
+      article.append(domain,meta,evidence,details,actions((label,node,row)=>resolveCandidate(value.id,label,node,row),article));return article;
+    }
+    function probeCard(value){
+      const article=document.createElement("article");const provenance=value.provenance||{};
+      const domain=document.createElement("div");domain.className="domain";domain.textContent=value.source||"未知域名";
+      const meta=document.createElement("div");meta.className="meta";meta.textContent=`${provenance.probe_type||""} · 探针分数 ${provenance.probe_score??""} · 信息价值 ${provenance.information_value??""} · 模型 ${provenance.model_verdict||"未调用"}`;
+      const evidence=document.createElement("div");evidence.className="evidence";evidence.textContent=`证据：${(provenance.evidence||[]).join("、")||"无"}`;
+      const details=document.createElement("pre");details.textContent=JSON.stringify(value.state?.probe?.delta||{},null,2);
+      article.append(domain,meta,evidence,details,actions((label,node,row)=>resolveProbe(value.id,label,node,row),article));return article;
+    }
+    async function post(url,reviewId,label,article,row){
+      for(const value of row.querySelectorAll("button"))value.disabled=true;
+      try{const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({review_id:reviewId,label})});const payload=await response.json();if(!response.ok)throw new Error(payload.detail||payload.error||`HTTP ${response.status}`);if(payload.result?.saved||payload.result?.reason==="already_reviewed")article.remove();else throw new Error(payload.result?.reason||"保存失败");updateCounts()}catch(error){summary.className="summary error";summary.textContent=`保存失败：${error}`;for(const value of row.querySelectorAll("button"))value.disabled=false}
+    }
+    function resolveCandidate(reviewId,label,article,row){return post("/v1/training/review",reviewId,label,article,row)}
+    function resolveProbe(reviewId,label,article,row){return post("/v1/probes/review",reviewId,label,article,row)}
+    function updateCounts(){const candidateCount=candidates.querySelectorAll("article").length;const probeCount=probes.querySelectorAll("article").length;document.querySelector("#candidate-count").textContent=String(candidateCount);document.querySelector("#probe-count").textContent=String(probeCount);summary.className="summary";summary.textContent=`待复核候选 ${candidateCount} 条，待复核探针 ${probeCount} 条`;if(!candidateCount&&!candidates.querySelector(".empty"))candidates.append(empty("当前没有待复核候选"));if(!probeCount&&!probes.querySelector(".empty"))probes.append(empty("当前没有待复核探针"))}
+    async function load(){summary.className="summary";summary.textContent="正在读取待复核样本…";try{const [candidateResponse,probeResponse]=await Promise.all([fetch("/v1/training/review?limit=100",{cache:"no-store"}),fetch("/v1/probes/review?limit=100",{cache:"no-store"})]);if(!candidateResponse.ok||!probeResponse.ok)throw new Error("复核服务不可用");const [candidatePayload,probePayload]=await Promise.all([candidateResponse.json(),probeResponse.json()]);candidates.replaceChildren(...(candidatePayload.items||[]).map(candidateCard));probes.replaceChildren(...(probePayload.items||[]).map(probeCard));updateCounts()}catch(error){summary.className="summary error";summary.textContent=`读取失败：${error}`}}
+    document.querySelector("#refresh").onclick=load;load();
+  </script>
+</body>
+</html>

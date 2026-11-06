@@ -1,0 +1,17 @@
+{
+  "python": "3.13.0",
+  "os": "Windows",
+  "packages": {
+    "torch": "2.8.0+cu128",
+    "transformers": "4.57.6",
+    "peft": "0.21.2",
+    "accelerate": "1.15.0",
+    "bitsandbytes": "0.50.2",
+    "scikit-learn": "1.9.1",
+    "cryptography": "46.0.7"
+  },
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU, 621.01, 12227 MiB",
+  "offline_model_loading": true,
+  "gpu_candidates_run_sequentially": true,
+  "online_service_not_stopped": true
+}

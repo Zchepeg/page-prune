@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.jev-ad-block/probe.schema.json",
+  "title": "SSA observation probe",
+  "type": "object",
+  "required": [
+    "probe_id", "protocol_version", "probe_type", "domain", "candidate_fingerprint",
+    "seed_digest", "detector_score", "detector_route", "original_action", "sampling_rate",
+    "scheduled_delay_ms", "started_at", "completed_at", "before", "after", "delta"
+  ],
+  "properties": {
+    "probe_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "protocol_version": {"const": "ssa-probe-v1"},
+    "probe_type": {"enum": ["delayed_recheck", "dom_change", "visibility", "resource_association"]},
+    "domain": {"type": "string", "minLength": 1, "maxLength": 253},
+    "candidate_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "seed_digest": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "detector_score": {"type": "number", "minimum": 0.45, "exclusiveMaximum": 0.90},
+    "detector_route": {"enum": ["block", "allow", "jev"]},
+    "original_action": {"enum": ["allow", "review"]},
+    "sampling_rate": {"type": "number", "exclusiveMinimum": 0, "maximum": 0.02},
+    "scheduled_delay_ms": {"type": "integer", "minimum": 100, "maximum": 5000},
+    "started_at": {"type": "string", "format": "date-time"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "before": {"$ref": "#/$defs/snapshot"},
+    "after": {"$ref": "#/$defs/snapshot"},
+    "delta": {"$ref": "#/$defs/delta"}
+  },
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "required": ["width", "height", "visible", "in_viewport", "fixed", "child_count", "resource_hosts", "connected"],
+      "properties": {
+        "width": {"type": "number"},
+        "height": {"type": "number"},
+        "visible": {"type": "boolean"},
+        "in_viewport": {"type": "boolean"},
+        "fixed": {"type": "boolean"},
+        "child_count": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "resource_hosts": {"type": "array", "maxItems": 8, "items": {"type": "string", "maxLength": 253}},
+        "connected": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "delta": {
+      "type": "object",
+      "required": ["width", "height", "visibility_changed", "viewport_changed", "children", "new_resource_hosts", "mutation_count", "disconnected"],
+      "properties": {
+        "width": {"type": "number"},
+        "height": {"type": "number"},
+        "visibility_changed": {"type": "boolean"},
+        "viewport_changed": {"type": "boolean"},
+        "children": {"type": "integer", "minimum": -1000, "maximum": 1000},
+        "new_resource_hosts": {"type": "array", "maxItems": 8, "items": {"type": "string", "maxLength": 253}},
+        "mutation_count": {"type": "integer", "minimum": 0, "maximum": 10000},
+        "disconnected": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

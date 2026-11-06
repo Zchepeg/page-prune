@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "priority": 2,
+    "action": {"type": "block"},
+    "condition": {
+      "urlFilter": "||google-analytics.com/g/collect",
+      "resourceTypes": ["ping"]
+    }
+  }
+]

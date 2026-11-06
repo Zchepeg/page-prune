@@ -1,0 +1,46 @@
+# JEV Decision-Aware Ad Blocker
+
+一个在本机运行的 Chromium 广告屏蔽研究项目。扩展用静态规则拦截已知广告请求。本地服务对不容易判断的页面元素做分类，再由执行策略决定是否隐藏。正文、导航和表单有额外保护。
+
+## 安装扩展
+
+1. 打开 Edge 的扩展管理页，开启「开发人员模式」。
+2. 选择「加载解压缩的扩展」，指向 [browser/extension](browser/extension/)。
+3. 打开新标签页。搜索使用浏览器默认搜索引擎。搜索框下方可新建网址和文件夹，收藏保存在扩展本地。左侧显示中文维基百科热读榜和榜单日期。
+
+静态拦截和新标签页只需要 Chromium 111 或更新版本。修改扩展后，在扩展管理页重新加载，再刷新已经打开的网页。
+
+## 运行本地服务
+
+需要 Python 3.11 或更新版本。在仓库根目录执行：
+
+```powershell
+python -m pip install -r requirements.txt
+python -m service.api --config config/config.yaml
+```
+
+打开扩展设置，输入终端显示的六位配对码。配对后可在网页上点选并标记广告，也可以打开 [本地复核页](http://127.0.0.1:8765/review) 查看待复核记录。
+
+公开配置使用 CPU 启发式后端。Qwen 推理需要另行准备检查点和 CUDA 环境。完整测试、模型配置与训练命令见[本地开发指南](docs/local-development.md)。
+
+## 实测结果
+
+下表比较同一批 352 条人工盲标候选，来自 36 个新域名。四个 Qwen 候选和 CPU 轻量候选均使用同一组规则和执行策略。
+
+| 模式 | 最终处理的广告 | 被误处理的非广告 | 决策核心 P95 |
+| --- | ---: | ---: | ---: |
+| 纯规则 | 35/69 | 0/283 | 0.037 ms |
+| 规则＋CPU TF-IDF | 51/69 | 0/283 | 0.628 ms |
+| 规则＋Qwen 4B（四个候选） | 54–66/69 | 1–5/283 | 82.917–94.749 ms |
+
+轻量模型比纯规则多处理了 16 条广告，目前用于影子观察。Qwen 找回了更多广告，也误处理了一些正常元素。资源归属输入 v3 在两个随机种子下的收益方向相反，所以项目保留了原部署检查点。表中的比例以采集到的候选为分母，耗时只覆盖本地决策核心。[完整盲测结果](docs/fresh-blind-interpretation.md)
+
+## 设计与维护
+
+- 规则分流、置信度不足时的弃权，以及模型判断如何变成页面动作。[决策协议](docs/decision-protocol.md)
+- 配对、加密会话和浏览器发送的字段。[本地通信](docs/local-security.md) · [隐私说明](PRIVACY.md)
+- 被动复查少量放行候选的 SSA 探针。目前它的增量收益尚待验证。[探针协议](docs/shadow-audit-protocol.md)
+- 独立评测格式、指标和旧检查点的配对统计。[评测指南](docs/evaluation.md) · [历史统计](docs/historical-paired-statistics.md)
+- CPU 轻量模型的实际网页检查与进程内存测量。[影子运行记录](docs/lightweight-shadow-validation.md)
+
+项目自有代码和文档采用 Apache-2.0。第三方规则、数据和模型遵循各自的许可。模型权重、私有样本和配对记录保存在本机。[参考来源](REFERENCES.md) · [第三方声明](THIRD_PARTY_NOTICES.md) · [模型卡](MODEL_CARD.md) · [发布清单](PUBLISHING.md)

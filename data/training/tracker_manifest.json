@@ -1,0 +1,51 @@
+{
+  "created_at": "2026-10-08T14:57:09.907800+00:00",
+  "seed": 20261009,
+  "sources": {
+    "data\\sources\\d3host.adblock": "477e01f2fd43add57b51dd8ac18e4666e17e345df62cca1157e01083b8c2bbc0",
+    "data\\sources\\tracker_vendors.json": "3c280d4ea5a796069e8861ad9ff6508a16cc620451a1625ac1e5d43e9f588430",
+    "scripts\\anti-AD-master\\anti-ad-domains.txt": "348ebf99c28ad505bdae56314592bdb2590ef1dec714061daa54d96e6ab9c25e",
+    "data\\sources\\test-pages\\mobileproxy-adblock-test.html": "6f16219e47834eeb28dfe23a82e48c3b816f88f3c8f7c5aa6c93b9c09366d556",
+    "data\\sources\\test-pages\\superadblocktest-adblock.js": "25ab1a22f8479a0055ff698050646393ef76a68b565d2971d9cfc83db3e5f309",
+    "data\\sources\\test-pages\\iblockads-data.js": "9717596036d03667c3061cc038d873f4a8c4b60087731a54d091adc35e7fb113",
+    "data\\sources\\test-pages\\mauriziofonte-adblock-test.js": "5516413b090b75bfd76e8db74215f8a6a1702eacb02b56afb50dd4f7530189fb",
+    "data\\sources\\test-pages\\adblockbench-app.js": "857ad79ee5f30ce96adfbed28e53332b22a45e125ea61365487a3283de27c1dd",
+    "data\\sources\\test-pages\\paileactivist-data.js": "fc9fb626d51dbed2b19ca0c3ed7a41ed237cc41e76f325efbb2e9387fed52275"
+  },
+  "taxonomy_entries": 1718,
+  "vendors": 74,
+  "dnr_rules": 1085,
+  "anti_ad_hosts": 108911,
+  "anti_ad_dnr_rules": 109,
+  "categories": {
+    "ads": 20,
+    "advertising_network": 25,
+    "analytics": 50,
+    "benchmark_privacy": 1514,
+    "error_trackers": 6,
+    "mix": 19,
+    "oems": 35,
+    "session_recording": 14,
+    "social_pixel": 16,
+    "social_trackers": 19
+  },
+  "training": {
+    "path": "data/training/tracker_train.jsonl",
+    "examples": 540,
+    "labels": {
+      "1": 180,
+      "0": 180,
+      "2": 180
+    }
+  },
+  "combined_calibration": {
+    "path": "data/training/calibration_v2.jsonl",
+    "examples": 225,
+    "labels": {
+      "1": 75,
+      "2": 75,
+      "0": 75
+    }
+  },
+  "domain_overlap": []
+}

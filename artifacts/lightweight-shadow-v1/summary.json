@@ -1,0 +1,129 @@
+{
+  "status": "isolated shadow tool retained; no default backend or production changes",
+  "scope": "functional tests and small anonymous browser observation, not new independent accuracy or matched causal latency evidence",
+  "real_model_fixture": {
+    "passed_execution_consistency": true,
+    "positive_action_exercised": false,
+    "synthetic_ad_probability": 0.5016652346860833
+  },
+  "forced_output_fixture": {
+    "passed": true,
+    "scope": "execution lifecycle only; fixed output is not model prediction"
+  },
+  "baseline": {
+    "successful_pages": 5,
+    "performance": {
+      "primary": {
+        "requests": 11,
+        "candidate_commands": 138,
+        "mean_ms": 0.7022454519756138,
+        "p95_ms": 3.01210000179708
+      },
+      "lightweight_shadow": {
+        "enabled": false
+      }
+    },
+    "resources": {
+      "before_model": {
+        "rss_mb": 39.441,
+        "peak_rss_mb": 39.441,
+        "scope": "Python service/driver process only, excludes browser child processes and GPU"
+      },
+      "after_model": {
+        "rss_mb": 39.449,
+        "peak_rss_mb": 39.449,
+        "scope": "Python service/driver process only, excludes browser child processes and GPU"
+      },
+      "after_run": {
+        "rss_mb": 47.934,
+        "peak_rss_mb": 48.012,
+        "scope": "Python service/driver process only, excludes browser child processes and GPU"
+      },
+      "model_load_ms": 0.024200009647756815,
+      "elapsed_seconds": 42.69338529999368,
+      "python_process_cpu_seconds": 0.21875,
+      "python_process_cpu_percent_one_core_equivalent": 0.5123744544099958
+    }
+  },
+  "shadow": {
+    "successful_pages": 6,
+    "performance": {
+      "primary": {
+        "requests": 15,
+        "candidate_commands": 223,
+        "mean_ms": 0.8367733292592069,
+        "p95_ms": 3.606100013712421
+      },
+      "lightweight_shadow": {
+        "scope": "shadow-only; no commands, training labels or raw candidate persistence; disagreements are not ground truth",
+        "counters": {
+          "observed": 223,
+          "clear_skipped": 212,
+          "queued": 3,
+          "processed": 3,
+          "duplicate_skipped": 8,
+          "queue_dropped": 0,
+          "stale_dropped": 0,
+          "closed_dropped": 0,
+          "input_errors": 0,
+          "model_errors": 0,
+          "callback_errors": 0,
+          "action_disagreements": 1,
+          "potential_new_actions": 1
+        },
+        "would_actions": {
+          "allow": 2,
+          "hide": 1
+        },
+        "primary_to_shadow_actions": {
+          "allow->allow": 2,
+          "allow->hide": 1
+        },
+        "ad_probability_bins": {
+          "0": 2,
+          "7": 1
+        },
+        "decision_ms": {
+          "samples": 3,
+          "mean": 3.6891000054311007,
+          "p95": 8.434899995336309
+        },
+        "worker_cpu_ms": 0.0,
+        "queue_capacity": 64,
+        "queue_depth": 0,
+        "dedup_entries": 3,
+        "dedup_capacity": 512,
+        "timing_capacity": 512,
+        "last_error_type": null,
+        "worker_alive": false
+      }
+    },
+    "resources": {
+      "before_model": {
+        "rss_mb": 39.27,
+        "peak_rss_mb": 39.27,
+        "scope": "Python service/driver process only, excludes browser child processes and GPU"
+      },
+      "after_model": {
+        "rss_mb": 135.906,
+        "peak_rss_mb": 139.18,
+        "scope": "Python service/driver process only, excludes browser child processes and GPU"
+      },
+      "after_run": {
+        "rss_mb": 142.652,
+        "peak_rss_mb": 142.848,
+        "scope": "Python service/driver process only, excludes browser child processes and GPU"
+      },
+      "model_load_ms": 1208.7674000067636,
+      "elapsed_seconds": 59.37232920000679,
+      "python_process_cpu_seconds": 0.21875,
+      "python_process_cpu_percent_one_core_equivalent": 0.3684376256540311
+    },
+    "unlabelled_review_records": 1
+  },
+  "tests": {
+    "passed": 192,
+    "seconds": 8.6
+  },
+  "privacy": "raw page evidence stays in ignored runs; no ground truth inferred from class names or blank screenshots"
+}

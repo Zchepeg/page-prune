@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "JEV Decision-Aware Ad Blocker",
+  "version": "0.10.1",
+  "minimum_chrome_version": "111",
+  "description": "Finds ad candidates locally and delegates ambiguous decisions to a JEV-aware service.",
+  "permissions": ["storage", "activeTab", "declarativeNetRequest", "search"],
+  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "background": {"service_worker": "background.js", "type": "module"},
+  "action": {"default_title": "JEV Ad Blocker 状态", "default_popup": "popup.html"},
+  "options_page": "options.html",
+  "chrome_url_overrides": {"newtab": "newtab.html"},
+  "declarative_net_request": {
+    "rule_resources": [
+      {"id": "tracker_hosts", "enabled": true, "path": "rules/tracker_rules.json"},
+      {"id": "anti_ad_hosts", "enabled": true, "path": "rules/anti_ad_rules.json"},
+      {"id": "privacy_transport", "enabled": true, "path": "rules/privacy_rules.json"}
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["privacy_guard.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "css": ["cosmetic.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["probe.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

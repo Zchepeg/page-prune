@@ -1,0 +1,123 @@
+{
+  "server": {"host": "127.0.0.1", "port": 8765},
+  "local_security": {
+    "protocol_version": "jev-local-session-v1",
+    "session_lifetime_seconds": 3600,
+    "clock_skew_seconds": 120,
+    "pairing_lifetime_seconds": 600,
+    "pairing_attempt_limit": 10,
+    "registry_path": "data/security/paired_clients.json"
+  },
+  "detector": {
+    "block_score": 0.85,
+    "allow_score": 0.12,
+    "max_candidates_per_page": 80
+  },
+  "jev": {
+    "backend": "heuristic",
+    "checkpoint": "models/jev-qwen-pointer",
+    "device": "cuda",
+    "quantization": "nf4",
+    "gpu_memory_budget_mb": 4096,
+    "lazy_load": true,
+    "inference_max_length": 384,
+    "micro_batch_size": 2,
+    "question_version": "ad-classification-v1",
+    "uncertainty_margin": 0.08,
+    "min_confidence": 0.55
+  },
+  "policy": {
+    "block_threshold": 0.90,
+    "hide_threshold": 0.72,
+    "min_decision_level": "L1",
+    "fail_open": true,
+    "protected_tags": ["ARTICLE", "MAIN", "NAV", "HEADER", "FORM", "INPUT", "BUTTON"]
+  },
+  "decision_protocol": {
+    "version": "jev-ad-decision-v1",
+    "challenge_block_below": 0.98,
+    "challenge_allow_above": 0.02,
+    "challenge_rule_blocks": false,
+    "disagreement_path": "data/events/disagreements.jsonl"
+  },
+  "active_learning": {
+    "min_priority": 0.45
+  },
+  "shadow_audit": {
+    "enabled": true,
+    "protocol_version": "ssa-probe-v1",
+    "score_min": 0.45,
+    "score_max": 0.90,
+    "page_limit": 3,
+    "domain_hour_limit": 20,
+    "review_threshold": 0.15,
+    "model_threshold": 0.30,
+    "path": "data/events/probes.jsonl",
+    "review_path": "data/training/pending_probe_review.jsonl",
+    "reviewed_path": "data/training/reviewed_probes.jsonl"
+  },
+  "privacy": {
+    "max_text_length": 320,
+    "max_html_length": 0
+  },
+  "training_capture": {
+    "enabled": true,
+    "path": "data/training/auto_ads.jsonl",
+    "review_path": "data/training/pending_review.jsonl",
+    "reviewed_path": "data/training/reviewed.jsonl",
+    "min_score": 0.85,
+    "review_min_score": 0.35,
+    "per_domain_limit": 500,
+    "review_per_domain_limit": 200,
+    "control_review_per_domain_limit": 12,
+    "max_text_length": 240,
+    "excluded_domains": [
+      "adblockbench.com",
+      "adblock-tester.com",
+      "ads-blocker.com",
+      "adsblocks.com",
+      "canyoublockit.com",
+      "iblockads.net",
+      "mauriziofonte.it",
+      "mobileproxy.space",
+      "paileactivist.github.io",
+      "superadblocktest.com",
+      "tryblock.org"
+    ]
+  },
+  "auto_training": {
+    "enabled": false,
+    "training_sources": [
+      "data/training/bootstrap_train.jsonl",
+      "data/training/tracker_train.jsonl",
+      "data/training/reference_guided_v1.jsonl",
+      "data/training/reference_guided_v1_human.jsonl",
+      "data/training/auto_ads.jsonl",
+      "data/training/reviewed.jsonl"
+    ],
+    "calibration_path": "data/training/calibration_v2.jsonl",
+    "state_path": "data/training/auto_train_state.json",
+    "model": "Qwen/Qwen3-4B-Base",
+    "label_mode": "binary_selective",
+    "validation_fraction": 0.15,
+    "early_stopping_patience": 2,
+    "seed": 42,
+    "min_examples": 300,
+    "min_per_label": 60,
+    "min_domains": 20,
+    "min_calibration_per_label": 15,
+    "min_human_examples": 100,
+    "min_human_domains": 20,
+    "min_human_per_label": 30,
+    "min_human_calibration_per_label": 10,
+    "retrain_min_new": 100,
+    "epochs": 2,
+    "accum": 8,
+    "max_length": 384,
+    "evidence_dropout": 0.5,
+    "feature_dropout": 0.1,
+    "domain_balance_power": 0.5,
+    "label_smoothing": 0.05
+  },
+  "runtime": {"cache_size": 2048, "cache_ttl_seconds": 900, "max_model_candidates_per_batch": 12, "defer_model_startup": false}
+}

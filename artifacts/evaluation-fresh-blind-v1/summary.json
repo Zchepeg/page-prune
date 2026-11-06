@@ -1,0 +1,1465 @@
+{
+  "generated_at": "2026-11-01T11:27:14.898293+00:00",
+  "benchmark_sha256": "741d389dadd23ab9f2ba33117083c41bf305fbc0fcb1a6528443cb321119fd41",
+  "plan_sha256": "3fb8695dd06020117f9f68c02cf8c088089faf44404894d1b33247e2b49d35aa",
+  "data": {
+    "examples": 352,
+    "domains": 36,
+    "ads": 69,
+    "non_ads": 283,
+    "annotation_method": "independent human blind",
+    "used_for_supervision": false,
+    "sampling": "mixed targeted/control/neutral/ambiguous public-site candidates, access failures retained locally; not natural-web prevalence"
+  },
+  "status": "frozen candidate evaluation; no automatic model promotion",
+  "primary": "ordinary rule-model cascade versus same rules, page-action recall and FPR",
+  "timing_scope": "warmed serial candidate decision core only; excludes HTTP, browser, cache, batching and model load; GPU service remained resident",
+  "statistical_scope": "10000 paired domain percentile bootstrap draws, seed42; per-comparison intervals, five descriptive comparisons; McNemar candidate-independence assumption, no multiplicity-adjusted confirmatory claims; training-seed uncertainty not included",
+  "models": {
+    "rules": {
+      "state_schema": "candidate-features-v2",
+      "load_ms": 0.0016999838408082724,
+      "warmup_ms": 0.000200001522898674,
+      "model_metadata": {},
+      "runtime": {
+        "backend": "heuristic",
+        "loaded": true
+      },
+      "modes": {
+        "rules_only": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 1.0,
+            "recall": 0.5072463768115942,
+            "false_positive_rate": 0.0,
+            "accuracy": 0.9034090909090909,
+            "f1": 0.6730769230769231
+          },
+          "three_class_accuracy": 0.7926136363636364,
+          "coverage": 0.7926136363636364,
+          "ece_10_bin": 0.02831676136363637,
+          "page_action_false_positive_rate": 0.0,
+          "latency_ms": {
+            "mean": 0.016029261049962686,
+            "p95": 0.03670001751743257
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              35,
+              0,
+              34
+            ],
+            [
+              0,
+              244,
+              39
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "rules": 352
+          },
+          "routing": {
+            "model_calls": 0,
+            "model_call_rate": 0.0,
+            "protocol_routes": {
+              "rules_only": 352
+            },
+            "ad_classifications_without_destructive_action": 0
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 0,
+            "mean": null,
+            "p95": null
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.5072463768115942
+        }
+      },
+      "primary_action_counts": {
+        "true_ads": 35,
+        "false_non_ads": 0,
+        "ad_total": 69,
+        "non_ad_total": 283
+      },
+      "action_fpr_wilson_95_candidate_independence": [
+        8.673617379884035e-19,
+        0.013392271941746883
+      ]
+    },
+    "tfidf": {
+      "state_schema": "candidate-features-v2",
+      "load_ms": 1402.4367999809328,
+      "warmup_ms": 9.795600024517626,
+      "model_metadata": {
+        "temperature": 0.38920243737293553,
+        "state_schema": "candidate-features-v2",
+        "architecture": "tfidf-logistic-baseline-v1",
+        "seed": 42
+      },
+      "runtime": {
+        "backend": "tfidf_cpu",
+        "loaded": true,
+        "gpu_required": false
+      },
+      "modes": {
+        "rule_model_cascade": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9833333333333333,
+            "recall": 0.855072463768116,
+            "false_positive_rate": 0.0035335689045936395,
+            "accuracy": 0.96875,
+            "f1": 0.9147286821705427
+          },
+          "three_class_accuracy": 0.96875,
+          "coverage": 0.9943181818181818,
+          "ece_10_bin": 0.03671123636722044,
+          "page_action_false_positive_rate": 0.0,
+          "latency_ms": {
+            "mean": 0.13580568214489508,
+            "p95": 0.6282000103965402
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              59,
+              8,
+              2
+            ],
+            [
+              1,
+              282,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 73,
+            "rules": 279
+          },
+          "routing": {
+            "model_calls": 73,
+            "model_call_rate": 0.20738636363636365,
+            "protocol_routes": {
+              "ordinary_cascade": 352
+            },
+            "ad_classifications_without_destructive_action": 9
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 73,
+            "mean": 0.5443397245994986,
+            "p95": 0.6711999885737896
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.7391304347826086
+        },
+        "model_only": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 1.0,
+            "recall": 0.36231884057971014,
+            "false_positive_rate": 0.0,
+            "accuracy": 0.875,
+            "f1": 0.5319148936170213
+          },
+          "three_class_accuracy": 0.875,
+          "coverage": 0.9772727272727273,
+          "ece_10_bin": 0.07794888963932363,
+          "page_action_false_positive_rate": 0.0,
+          "latency_ms": {
+            "mean": 0.593444318589966,
+            "p95": 0.8826999983284622
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              25,
+              36,
+              8
+            ],
+            [
+              0,
+              283,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 352
+          },
+          "routing": {
+            "model_calls": 352,
+            "model_call_rate": 1.0,
+            "protocol_routes": {
+              "model_only": 352
+            },
+            "ad_classifications_without_destructive_action": 12
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 352,
+            "mean": 0.5525193185101009,
+            "p95": 0.8311000128742307
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.18840579710144928
+        }
+      },
+      "primary_action_counts": {
+        "true_ads": 51,
+        "false_non_ads": 0,
+        "ad_total": 69,
+        "non_ad_total": 283
+      },
+      "action_fpr_wilson_95_candidate_independence": [
+        8.673617379884035e-19,
+        0.013392271941746883
+      ]
+    },
+    "qwen-v2-seed42": {
+      "state_schema": "candidate-features-v2",
+      "load_ms": 22295.466400013538,
+      "warmup_ms": 2524.2420000140555,
+      "model_metadata": {
+        "state_schema": "candidate-features-v2",
+        "instruction": "Classify this candidate web element. Choose ad only for paid promotional content; choose non_ad for normal content and controls; choose insufficient_evidence when the state cannot decide.",
+        "architecture": "qwen-pointer-selective-v2",
+        "temperature": 0.31219324469566345
+      },
+      "runtime": {
+        "backend": "qwen_pointer",
+        "loaded": true,
+        "quantization": "nf4",
+        "inference_max_length": 384,
+        "micro_batch_size": 2,
+        "cuda_allocated_mb": 2620.4,
+        "cuda_reserved_mb": 4084.0
+      },
+      "modes": {
+        "rule_model_cascade": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9523809523809523,
+            "recall": 0.8695652173913043,
+            "false_positive_rate": 0.01060070671378092,
+            "accuracy": 0.9659090909090909,
+            "f1": 0.909090909090909
+          },
+          "three_class_accuracy": 0.9659090909090909,
+          "coverage": 0.9914772727272727,
+          "ece_10_bin": 0.028478876376175313,
+          "page_action_false_positive_rate": 0.0035335689045936395,
+          "latency_ms": {
+            "mean": 19.53031761372999,
+            "p95": 92.88380001089536
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              60,
+              6,
+              3
+            ],
+            [
+              3,
+              280,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 73,
+            "rules": 279
+          },
+          "routing": {
+            "model_calls": 73,
+            "model_call_rate": 0.20738636363636365,
+            "protocol_routes": {
+              "ordinary_cascade": 352
+            },
+            "ad_classifications_without_destructive_action": 6
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 73,
+            "mean": 93.96198492980409,
+            "p95": 95.48339998582378
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.8115942028985508
+        },
+        "model_only": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 1.0,
+            "recall": 0.5942028985507246,
+            "false_positive_rate": 0.0,
+            "accuracy": 0.9204545454545454,
+            "f1": 0.7454545454545455
+          },
+          "three_class_accuracy": 0.9204545454545454,
+          "coverage": 0.9829545454545454,
+          "ece_10_bin": 0.06931076942997938,
+          "page_action_false_positive_rate": 0.0,
+          "latency_ms": {
+            "mean": 87.33381449035898,
+            "p95": 113.03949999273755
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              41,
+              22,
+              6
+            ],
+            [
+              0,
+              283,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 352
+          },
+          "routing": {
+            "model_calls": 352,
+            "model_call_rate": 1.0,
+            "protocol_routes": {
+              "model_only": 352
+            },
+            "ad_classifications_without_destructive_action": 20
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 352,
+            "mean": 87.24431590929849,
+            "p95": 112.95400001108646
+          },
+          "truncated": 12,
+          "page_action_ad_recall": 0.30434782608695654
+        }
+      },
+      "primary_action_counts": {
+        "true_ads": 56,
+        "false_non_ads": 1,
+        "ad_total": 69,
+        "non_ad_total": 283
+      },
+      "action_fpr_wilson_95_candidate_independence": [
+        0.0006240342447977141,
+        0.01974073047474601
+      ]
+    },
+    "qwen-v2-seed7": {
+      "state_schema": "candidate-features-v2",
+      "load_ms": 12818.3912000095,
+      "warmup_ms": 1862.4723000102676,
+      "model_metadata": {
+        "seed": 7,
+        "state_schema": "candidate-features-v2",
+        "instruction": "Classify this candidate web element. Choose ad only for paid promotional content; choose non_ad for normal content and controls; choose insufficient_evidence when the state cannot decide.",
+        "architecture": "qwen-pointer-selective-v2",
+        "temperature": 0.6525644659996033
+      },
+      "runtime": {
+        "backend": "qwen_pointer",
+        "loaded": true,
+        "quantization": "nf4",
+        "inference_max_length": 384,
+        "micro_batch_size": 2,
+        "cuda_allocated_mb": 2620.4,
+        "cuda_reserved_mb": 4084.0
+      },
+      "modes": {
+        "rule_model_cascade": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9285714285714286,
+            "recall": 0.9420289855072463,
+            "false_positive_rate": 0.0176678445229682,
+            "accuracy": 0.9744318181818182,
+            "f1": 0.935251798561151
+          },
+          "three_class_accuracy": 0.9602272727272727,
+          "coverage": 0.9772727272727273,
+          "ece_10_bin": 0.01804103849122345,
+          "page_action_false_positive_rate": 0.01060070671378092,
+          "latency_ms": {
+            "mean": 17.49760766961117,
+            "p95": 82.91679999092594
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              65,
+              1,
+              3
+            ],
+            [
+              5,
+              273,
+              5
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 73,
+            "rules": 279
+          },
+          "routing": {
+            "model_calls": 73,
+            "model_call_rate": 0.20738636363636365,
+            "protocol_routes": {
+              "ordinary_cascade": 352
+            },
+            "ad_classifications_without_destructive_action": 5
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 73,
+            "mean": 84.184427396793,
+            "p95": 93.92270000535063
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.8985507246376812
+        },
+        "model_only": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9649122807017544,
+            "recall": 0.7971014492753623,
+            "false_positive_rate": 0.007067137809187279,
+            "accuracy": 0.9545454545454546,
+            "f1": 0.8730158730158731
+          },
+          "three_class_accuracy": 0.9545454545454546,
+          "coverage": 1.0,
+          "ece_10_bin": 0.030395281090022763,
+          "page_action_false_positive_rate": 0.007067137809187279,
+          "latency_ms": {
+            "mean": 92.72314232971853,
+            "p95": 110.08760001277551
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              55,
+              14,
+              0
+            ],
+            [
+              2,
+              281,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 352
+          },
+          "routing": {
+            "model_calls": 352,
+            "model_call_rate": 1.0,
+            "protocol_routes": {
+              "model_only": 352
+            },
+            "ad_classifications_without_destructive_action": 2
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 352,
+            "mean": 92.62260994331551,
+            "p95": 109.94860000209883
+          },
+          "truncated": 12,
+          "page_action_ad_recall": 0.7681159420289855
+        }
+      },
+      "primary_action_counts": {
+        "true_ads": 62,
+        "false_non_ads": 3,
+        "ad_total": 69,
+        "non_ad_total": 283
+      },
+      "action_fpr_wilson_95_candidate_independence": [
+        0.0036116216701221563,
+        0.03069812860501525
+      ]
+    },
+    "qwen-v3-seed42": {
+      "state_schema": "candidate-features-v3",
+      "load_ms": 14335.436900000786,
+      "warmup_ms": 1543.357200018363,
+      "model_metadata": {
+        "state_schema": "candidate-features-v3",
+        "instruction": "Classify this candidate web element. Choose ad only for paid promotional content; choose non_ad for normal content and controls; choose insufficient_evidence when the state cannot decide.",
+        "architecture": "qwen-pointer-selective-v2",
+        "temperature": 0.4891917407512665
+      },
+      "runtime": {
+        "backend": "qwen_pointer",
+        "loaded": true,
+        "quantization": "nf4",
+        "inference_max_length": 384,
+        "micro_batch_size": 2,
+        "cuda_allocated_mb": 2620.4,
+        "cuda_reserved_mb": 4084.0
+      },
+      "modes": {
+        "rule_model_cascade": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9054054054054054,
+            "recall": 0.9710144927536232,
+            "false_positive_rate": 0.024734982332155476,
+            "accuracy": 0.9744318181818182,
+            "f1": 0.937062937062937
+          },
+          "three_class_accuracy": 0.9659090909090909,
+          "coverage": 0.9886363636363636,
+          "ece_10_bin": 0.022353453790260994,
+          "page_action_false_positive_rate": 0.0176678445229682,
+          "latency_ms": {
+            "mean": 19.591910511487434,
+            "p95": 94.7493999847211
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              67,
+              1,
+              1
+            ],
+            [
+              7,
+              273,
+              3
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 73,
+            "rules": 279
+          },
+          "routing": {
+            "model_calls": 73,
+            "model_call_rate": 0.20738636363636365,
+            "protocol_routes": {
+              "ordinary_cascade": 352
+            },
+            "ad_classifications_without_destructive_action": 3
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 73,
+            "mean": 94.25361643821218,
+            "p95": 102.56940001272596
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.9565217391304348
+        },
+        "model_only": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9384615384615385,
+            "recall": 0.8840579710144928,
+            "false_positive_rate": 0.014134275618374558,
+            "accuracy": 0.9659090909090909,
+            "f1": 0.9104477611940298
+          },
+          "three_class_accuracy": 0.9602272727272727,
+          "coverage": 0.9943181818181818,
+          "ece_10_bin": 0.0321146796969019,
+          "page_action_false_positive_rate": 0.007067137809187279,
+          "latency_ms": {
+            "mean": 92.91800823740977,
+            "p95": 117.82429998856969
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              61,
+              8,
+              0
+            ],
+            [
+              4,
+              277,
+              2
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 352
+          },
+          "routing": {
+            "model_calls": 352,
+            "model_call_rate": 1.0,
+            "protocol_routes": {
+              "model_only": 352
+            },
+            "ad_classifications_without_destructive_action": 4
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 352,
+            "mean": 92.82022329567884,
+            "p95": 117.65120000927709
+          },
+          "truncated": 13,
+          "page_action_ad_recall": 0.855072463768116
+        }
+      },
+      "primary_action_counts": {
+        "true_ads": 66,
+        "false_non_ads": 5,
+        "ad_total": 69,
+        "non_ad_total": 283
+      },
+      "action_fpr_wilson_95_candidate_independence": [
+        0.007569663162461916,
+        0.04068507266826918
+      ]
+    },
+    "qwen-v3-seed7": {
+      "state_schema": "candidate-features-v3",
+      "load_ms": 12999.506299995119,
+      "warmup_ms": 1514.4896000274457,
+      "model_metadata": {
+        "seed": 7,
+        "state_schema": "candidate-features-v3",
+        "instruction": "Classify this candidate web element. Choose ad only for paid promotional content; choose non_ad for normal content and controls; choose insufficient_evidence when the state cannot decide.",
+        "architecture": "qwen-pointer-selective-v2",
+        "temperature": 0.7583217024803162
+      },
+      "runtime": {
+        "backend": "qwen_pointer",
+        "loaded": true,
+        "quantization": "nf4",
+        "inference_max_length": 384,
+        "micro_batch_size": 2,
+        "cuda_allocated_mb": 2620.4,
+        "cuda_reserved_mb": 4084.0
+      },
+      "modes": {
+        "rule_model_cascade": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 0.9508196721311475,
+            "recall": 0.8405797101449275,
+            "false_positive_rate": 0.01060070671378092,
+            "accuracy": 0.9602272727272727,
+            "f1": 0.8923076923076922
+          },
+          "three_class_accuracy": 0.9602272727272727,
+          "coverage": 0.9943181818181818,
+          "ece_10_bin": 0.027715139542917967,
+          "page_action_false_positive_rate": 0.007067137809187279,
+          "latency_ms": {
+            "mean": 17.95524801036663,
+            "p95": 92.50689999316819
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              58,
+              9,
+              2
+            ],
+            [
+              3,
+              280,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 73,
+            "rules": 279
+          },
+          "routing": {
+            "model_calls": 73,
+            "model_call_rate": 0.20738636363636365,
+            "protocol_routes": {
+              "ordinary_cascade": 352
+            },
+            "ad_classifications_without_destructive_action": 5
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 73,
+            "mean": 86.39706575394646,
+            "p95": 95.17250000499189
+          },
+          "truncated": 0,
+          "page_action_ad_recall": 0.782608695652174
+        },
+        "model_only": {
+          "examples": 352,
+          "domains": 36,
+          "labels": {
+            "0": 69,
+            "1": 283
+          },
+          "binary_ad_metrics": {
+            "precision": 1.0,
+            "recall": 0.6521739130434783,
+            "false_positive_rate": 0.0,
+            "accuracy": 0.9318181818181818,
+            "f1": 0.7894736842105263
+          },
+          "three_class_accuracy": 0.9318181818181818,
+          "coverage": 0.9829545454545454,
+          "ece_10_bin": 0.058387676976218994,
+          "page_action_false_positive_rate": 0.0,
+          "latency_ms": {
+            "mean": 89.42630284044836,
+            "p95": 113.1098999758251
+          },
+          "confusion_actual_rows_predicted_columns": [
+            [
+              45,
+              18,
+              6
+            ],
+            [
+              0,
+              283,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "sources": {
+            "model": 352
+          },
+          "routing": {
+            "model_calls": 352,
+            "model_call_rate": 1.0,
+            "protocol_routes": {
+              "model_only": 352
+            },
+            "ad_classifications_without_destructive_action": 18
+          },
+          "ssa": {
+            "available_probes": 0,
+            "assessed_probes": 0,
+            "execution_status": "not_executed",
+            "flagged": 0,
+            "review_rate": 0.0,
+            "ad_discovery_recall": 0.0,
+            "review_yield": 0.0,
+            "routes": {}
+          },
+          "model_call_timing_ms": {
+            "samples": 352,
+            "mean": 89.3353576708581,
+            "p95": 113.0107999779284
+          },
+          "truncated": 13,
+          "page_action_ad_recall": 0.391304347826087
+        }
+      },
+      "primary_action_counts": {
+        "true_ads": 54,
+        "false_non_ads": 2,
+        "ad_total": 69,
+        "non_ad_total": 283
+      },
+      "action_fpr_wilson_95_candidate_independence": [
+        0.0019402083718794497,
+        0.025397049125461115
+      ]
+    }
+  },
+  "comparisons": {
+    "tfidf": {
+      "examples": 352,
+      "domains": 36,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 59,
+            "fp": 1,
+            "fn": 10,
+            "recall": 0.855072463768116,
+            "f1": 0.9147286821705426
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.7533647839478652,
+            0.9193290471932429
+          ],
+          "delta_recall": 0.34782608695652173,
+          "delta_f1": 0.24165175909361947,
+          "delta_recall_domain_bootstrap_95": [
+            0.19354838709677424,
+            0.5079365079365079
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.12537313432835817,
+            0.38056265984654736
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 24,
+            "regressed": 0,
+            "two_sided_exact_p": 1.1920928955078125e-07
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 51,
+            "fp": 0,
+            "fn": 18,
+            "recall": 0.7391304347826086,
+            "f1": 0.85
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.6248942554937958,
+            0.8281444471114402
+          ],
+          "delta_recall": 0.2318840579710144,
+          "delta_f1": 0.17692307692307685,
+          "delta_recall_domain_bootstrap_95": [
+            0.11267605633802819,
+            0.3648648648648648
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.08137983609681732,
+            0.2959132942229292
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 16,
+            "regressed": 0,
+            "two_sided_exact_p": 3.0517578125e-05
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 62,
+        "regressed": 0,
+        "two_sided_exact_p": 4.336808689942018e-19,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      },
+      "delta_action_fpr_domain_bootstrap_95": [
+        0.0,
+        0.0
+      ],
+      "valid_resamples": 10000,
+      "limitation": "percentile resampling cannot create unobserved false positives; zero endpoints do not prove safety"
+    },
+    "qwen-v2-seed42": {
+      "examples": 352,
+      "domains": 36,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 60,
+            "fp": 3,
+            "fn": 9,
+            "recall": 0.8695652173913043,
+            "f1": 0.9090909090909091
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.7703170006041271,
+            0.9298337216039652
+          ],
+          "delta_recall": 0.3623188405797101,
+          "delta_f1": 0.23601398601398593,
+          "delta_recall_domain_bootstrap_95": [
+            0.21212121212121215,
+            0.5166666666666667
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.10708898944193068,
+            0.38757353996269184
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 25,
+            "regressed": 0,
+            "two_sided_exact_p": 5.960464477539063e-08
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 56,
+            "fp": 1,
+            "fn": 13,
+            "recall": 0.8115942028985508,
+            "f1": 0.8888888888888888
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.7038706411837159,
+            0.8864525167564403
+          ],
+          "delta_recall": 0.30434782608695654,
+          "delta_f1": 0.2158119658119657,
+          "delta_recall_domain_bootstrap_95": [
+            0.1785714285714285,
+            0.4423076923076923
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.10823132123258761,
+            0.34954896907216493
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 21,
+            "regressed": 0,
+            "two_sided_exact_p": 9.5367431640625e-07
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 61,
+        "regressed": 0,
+        "two_sided_exact_p": 8.673617379884035e-19,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      },
+      "delta_action_fpr_domain_bootstrap_95": [
+        0.0,
+        0.010948905109489052
+      ],
+      "valid_resamples": 10000,
+      "limitation": "percentile resampling cannot create unobserved false positives; zero endpoints do not prove safety"
+    },
+    "qwen-v2-seed7": {
+      "examples": 352,
+      "domains": 36,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 65,
+            "fp": 5,
+            "fn": 4,
+            "recall": 0.9420289855072463,
+            "f1": 0.935251798561151
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.8602075664233835,
+            0.9772276111196287
+          ],
+          "delta_recall": 0.4347826086956521,
+          "delta_f1": 0.2621748754842279,
+          "delta_recall_domain_bootstrap_95": [
+            0.2647058823529411,
+            0.6000000000000001
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.12205680498363425,
+            0.42715231788079466
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 30,
+            "regressed": 0,
+            "two_sided_exact_p": 1.862645149230957e-09
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 62,
+            "fp": 3,
+            "fn": 7,
+            "recall": 0.8985507246376812,
+            "f1": 0.9253731343283582
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.8050811424505202,
+            0.9499833618915401
+          ],
+          "delta_recall": 0.3913043478260869,
+          "delta_f1": 0.2522962112514351,
+          "delta_recall_domain_bootstrap_95": [
+            0.23529411764705876,
+            0.546875
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.11618560467665329,
+            0.40962962962962957
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 27,
+            "regressed": 0,
+            "two_sided_exact_p": 1.4901161193847656e-08
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 59,
+        "regressed": 0,
+        "two_sided_exact_p": 3.469446951953614e-18,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      },
+      "delta_action_fpr_domain_bootstrap_95": [
+        0.0,
+        0.032846715328467155
+      ],
+      "valid_resamples": 10000,
+      "limitation": "percentile resampling cannot create unobserved false positives; zero endpoints do not prove safety"
+    },
+    "qwen-v3-seed42": {
+      "examples": 352,
+      "domains": 36,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 67,
+            "fp": 7,
+            "fn": 2,
+            "recall": 0.9710144927536232,
+            "f1": 0.9370629370629371
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.9003341623693445,
+            0.9920147973076358
+          ],
+          "delta_recall": 0.46376811594202894,
+          "delta_f1": 0.26398601398601396,
+          "delta_recall_domain_bootstrap_95": [
+            0.3058823529411765,
+            0.6122448979591837
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.12144702842377253,
+            0.420814479638009
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 32,
+            "regressed": 0,
+            "two_sided_exact_p": 4.656612873077393e-10
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 66,
+            "fp": 5,
+            "fn": 3,
+            "recall": 0.9565217391304348,
+            "f1": 0.9428571428571428
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.8797879725062087,
+            0.9851040961037877
+          ],
+          "delta_recall": 0.4492753623188406,
+          "delta_f1": 0.2697802197802197,
+          "delta_recall_domain_bootstrap_95": [
+            0.3013698630136986,
+            0.5875
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.1346642468239564,
+            0.42275871422758715
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 31,
+            "regressed": 0,
+            "two_sided_exact_p": 9.313225746154785e-10
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 61,
+        "regressed": 0,
+        "two_sided_exact_p": 8.673617379884035e-19,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      },
+      "delta_action_fpr_domain_bootstrap_95": [
+        0.0,
+        0.04332129963898917
+      ],
+      "valid_resamples": 10000,
+      "limitation": "percentile resampling cannot create unobserved false positives; zero endpoints do not prove safety"
+    },
+    "qwen-v3-seed7": {
+      "examples": 352,
+      "domains": 36,
+      "repeats": 10000,
+      "seed": 42,
+      "method": "paired domain cluster percentile bootstrap; domains sampled with replacement, all candidates retained; micro metrics",
+      "limitations": "conditional on frozen predictions; no training-seed uncertainty; candidate-level McNemar assumes independent pairs and does not adjust domain clustering",
+      "metrics": {
+        "classification": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 58,
+            "fp": 3,
+            "fn": 11,
+            "recall": 0.8405797101449275,
+            "f1": 0.8923076923076924
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.7366551828518044,
+            0.9085817572223196
+          ],
+          "delta_recall": 0.33333333333333326,
+          "delta_f1": 0.21923076923076923,
+          "delta_recall_domain_bootstrap_95": [
+            0.1964285714285714,
+            0.48214285714285715
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.09510489510489506,
+            0.3619946091644205
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 23,
+            "regressed": 0,
+            "two_sided_exact_p": 2.384185791015625e-07
+          }
+        },
+        "page_action": {
+          "baseline": {
+            "tp": 35,
+            "fp": 0,
+            "fn": 34,
+            "recall": 0.5072463768115942,
+            "f1": 0.6730769230769231
+          },
+          "candidate": {
+            "tp": 54,
+            "fp": 2,
+            "fn": 15,
+            "recall": 0.782608695652174,
+            "f1": 0.864
+          },
+          "baseline_recall_wilson_95": [
+            0.39205267562636525,
+            0.6216757699071268
+          ],
+          "candidate_recall_wilson_95": [
+            0.6718170359123908,
+            0.8635923398937974
+          ],
+          "delta_recall": 0.2753623188405797,
+          "delta_f1": 0.19092307692307686,
+          "delta_recall_domain_bootstrap_95": [
+            0.1428571428571429,
+            0.42857142857142855
+          ],
+          "delta_f1_domain_bootstrap_95": [
+            0.07767584097859326,
+            0.32833583208395806
+          ],
+          "recall_valid_resamples": 10000,
+          "ad_recall_mcnemar": {
+            "improved": 19,
+            "regressed": 0,
+            "two_sided_exact_p": 3.814697265625e-06
+          }
+        }
+      },
+      "all_candidate_classification_mcnemar": {
+        "improved": 59,
+        "regressed": 0,
+        "two_sided_exact_p": 3.469446951953614e-18,
+        "scope": "exact class correctness including abstentions as incorrect; not an ad-recall or safety test"
+      },
+      "delta_action_fpr_domain_bootstrap_95": [
+        0.0,
+        0.021897810218978103
+      ],
+      "valid_resamples": 10000,
+      "limitation": "percentile resampling cannot create unobserved false positives; zero endpoints do not prove safety"
+    }
+  }
+}

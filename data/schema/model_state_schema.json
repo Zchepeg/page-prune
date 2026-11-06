@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.jev-ad-block/model-state.schema.json",
+  "title": "Candidate Features V2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "detector_evidence",
+    "tag",
+    "element_id",
+    "classes",
+    "attributes",
+    "resource_urls",
+    "geometry",
+    "fixed",
+    "visible",
+    "page_domain",
+    "text"
+  ],
+  "properties": {
+    "schema_version": {"const": "candidate-features-v2"},
+    "detector_evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "tag": {"type": "string"},
+    "element_id": {"type": "string"},
+    "classes": {"type": "array", "items": {"type": "string"}},
+    "attributes": {"type": "object", "additionalProperties": {"type": "string"}},
+    "resource_urls": {"type": "array", "items": {"type": "string"}},
+    "geometry": {
+      "type": "array",
+      "prefixItems": [{"type": "number", "minimum": 0}, {"type": "number", "minimum": 0}],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "fixed": {"type": "boolean"},
+    "visible": {"type": "boolean"},
+    "page_domain": {"type": "string"},
+    "text": {"type": "string"}
+  },
+  "additionalProperties": false
+}

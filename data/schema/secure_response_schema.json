@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.jev-ad-block/secure-response.schema.json",
+  "title": "JEV local secure response envelope",
+  "type": "object",
+  "required": ["session_id", "request_sequence", "timestamp", "nonce", "ciphertext"],
+  "properties": {
+    "session_id": {"type": "string", "minLength": 16, "maxLength": 128},
+    "request_sequence": {"type": "integer", "minimum": 1},
+    "timestamp": {"type": "integer", "minimum": 1},
+    "nonce": {"type": "string", "minLength": 16, "maxLength": 24},
+    "ciphertext": {"type": "string", "minLength": 24}
+  },
+  "additionalProperties": false
+}

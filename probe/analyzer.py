@@ -54,10 +54,16 @@ class ProbeAnalyzer:
             evidence.append("mutation_burst")
             information += min(0.20, record.delta["mutation_count"] * 0.02)
             risk_signal += min(0.10, record.delta["mutation_count"] * 0.01)
-        if abs(record.delta["width"]) >= 20 or abs(record.delta["height"]) >= 20:
+        width_change, height_change = record.delta["width"], record.delta["height"]
+        grows = max(width_change, height_change) >= 20
+        shrinks = min(width_change, height_change) <= -20
+        if grows and not shrinks:
             evidence.append("layout_expansion")
             information += 0.15
             risk_signal += 0.10
+        elif shrinks:
+            evidence.append("layout_resize" if grows else "layout_contraction")
+            information += 0.05
         if record.after["fixed"] and record.after["visible"]:
             evidence.append("visible_fixed_element")
             information += 0.10

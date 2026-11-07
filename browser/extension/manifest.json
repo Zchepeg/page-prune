@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "PagePrune",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "minimum_chrome_version": "111",
   "description": "Finds ad candidates locally and delegates ambiguous decisions to a JEV-aware service.",
   "permissions": ["storage", "activeTab", "declarativeNetRequest", "search"],
-  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "host_permissions": ["http://127.0.0.1:8765/*", "https://top.baidu.com/*"],
   "background": {"service_worker": "background.js", "type": "module"},
   "action": {"default_title": "PagePrune", "default_popup": "popup.html"},
   "options_page": "options.html",
@@ -33,7 +33,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["probe.js", "content.js"],
+      "js": ["probe.js", "content.js", "screenshot-content.js"],
       "run_at": "document_idle",
       "all_frames": true
     }

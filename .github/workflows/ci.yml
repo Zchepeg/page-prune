@@ -47,6 +47,9 @@ jobs:
       - run: node --check browser/extension/newtab-favorites.js
       - run: node --check browser/extension/newtab-hot.js
       - run: node --check browser/extension/popup.js
+      - run: node --check browser/extension/screenshot-background.js
+      - run: node --check browser/extension/screenshot-content.js
+      - run: node --check browser/extension/screenshot-review.js
       - run: node --check browser/extension/options.js
       - run: node --check browser/extension/probe.js
       - run: node --check browser/extension/privacy_guard.js

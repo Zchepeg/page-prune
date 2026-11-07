@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -18,8 +19,16 @@ class ProbeReviewStore:
         self.pending_path = Path(pending_path)
         self.reviewed_path = Path(reviewed_path)
         self._lock = threading.Lock()
+        self._inflight: set[str] = set()
 
     def queue(self, record: ProbeRecord, assessment: ProbeAssessment, decision: Decision | None) -> dict[str, Any]:
+        result, _, _ = self.queue_with_decision(record, assessment, lambda: (decision, "not_requested"))
+        return result
+
+    def queue_with_decision(
+        self, record: ProbeRecord, assessment: ProbeAssessment,
+        decide: Callable[[], tuple[Decision | None, str]],
+    ) -> tuple[dict[str, Any], Decision | None, str]:
         identity = json.dumps(
             [record.domain, record.candidate_fingerprint, record.delta],
             ensure_ascii=False,
@@ -27,6 +36,20 @@ class ProbeReviewStore:
             separators=(",", ":"),
         )
         review_id = "probe-review-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:20]
+        with self._lock:
+            if (review_id in self._inflight or review_id in self._ids(self.pending_path)
+                    or review_id in self._ids(self.reviewed_path)):
+                return {"queued": False, "reason": "duplicate", "review_id": review_id}, None, "duplicate_review"
+            self._inflight.add(review_id)
+        try:
+            decision, model_status = decide()
+            self._write_pending(review_id, record, assessment, decision)
+            return {"queued": True, "reason": "queued", "review_id": review_id}, decision, model_status
+        finally:
+            with self._lock:
+                self._inflight.remove(review_id)
+
+    def _write_pending(self, review_id: str, record: ProbeRecord, assessment: ProbeAssessment, decision: Decision | None) -> None:
         value = {
             "id": review_id,
             "source": record.domain,
@@ -50,12 +73,9 @@ class ProbeReviewStore:
             },
         }
         with self._lock:
-            if review_id in self._ids(self.pending_path) or review_id in self._ids(self.reviewed_path):
-                return {"queued": False, "reason": "duplicate", "review_id": review_id}
             self.pending_path.parent.mkdir(parents=True, exist_ok=True)
             with self.pending_path.open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(value, ensure_ascii=False, separators=(",", ":")) + "\n")
-        return {"queued": True, "reason": "queued", "review_id": review_id}
 
     def list_pending(self, limit: int = 50) -> list[dict[str, Any]]:
         limit = max(1, min(limit, 200))

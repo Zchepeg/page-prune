@@ -15,6 +15,9 @@ class ProbeStore:
         self._lock = threading.Lock()
         self._count = 0
         self._types: Counter[str] = Counter()
+        self._routes: Counter[str] = Counter()
+        self._model_outcomes: Counter[str] = Counter()
+        self._review_outcomes: Counter[str] = Counter()
 
     def append(self, value: dict) -> dict:
         if not self.enabled:
@@ -29,6 +32,21 @@ class ProbeStore:
                 self._types[record.probe_type] += 1
         return {"accepted": True, "probe_id": record.probe_id}
 
+    def record_outcome(self, route: str, model_status: str, review_status: str) -> None:
+        with self._lock:
+            self._routes[route] += 1
+            self._model_outcomes[model_status] += 1
+            self._review_outcomes[review_status] += 1
+
     def stats(self) -> dict:
         with self._lock:
-            return {"enabled": self.enabled, "records": self._count, "types": dict(self._types)}
+            return {
+                "enabled": self.enabled,
+                "records": self._count,
+                "types": dict(self._types),
+                "outcomes": {
+                    "routes": dict(self._routes),
+                    "model": dict(self._model_outcomes),
+                    "review": dict(self._review_outcomes),
+                },
+            }

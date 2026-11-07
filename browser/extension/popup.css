@@ -10,3 +10,4 @@ p { margin: 12px 0 0; color: #64748b; font-size: 12px; line-height: 1.5; }
   body { color: #e5e7eb; background: #111827; }
   .version, p { color: #94a3b8; }
 }
+.screenshot-option { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; }

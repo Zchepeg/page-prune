@@ -1,0 +1,5 @@
+:root { color-scheme: light dark; font: 16px system-ui, sans-serif; }
+main { max-width: 840px; margin: 36px auto; padding: 0 16px; }
+img[src] { display: block; max-width: 100%; margin: 16px 0; border: 1px solid GrayText; }
+img:not([src]) { display: none; }
+button { padding: 8px 14px; margin-right: 8px; font: inherit; }

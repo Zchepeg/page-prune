@@ -141,6 +141,25 @@ def test_process_many_batches_and_deduplicates_identical_states():
     assert [result["source"] for result in results] == ["jev", "cache", "cache"]
 
 
+def test_decisions_distinguish_text_tail_and_model_geometry():
+    backend = BatchCountingBackend()
+    orchestrator = AdBlockOrchestrator(CandidateRanker(), JevDecider(backend), BlockingPolicy())
+    page = PageContext("https://news.test", top_level_domain="news.test")
+    prefix = "x" * 170
+    candidates = [
+        Candidate("first", page, text=prefix + " first", width=300.1, height=250),
+        Candidate("second", page, text=prefix + " second", width=300.1, height=250),
+        Candidate("third", page, text=prefix + " first", width=300.4, height=250),
+    ]
+    assert len({orchestrator.cache.key(candidate) for candidate in candidates}) == 1
+
+    results = orchestrator.process_many(candidates)
+
+    assert backend.state_counts == [3]
+    assert [result["source"] for result in results] == ["jev", "jev", "jev"]
+    assert all(orchestrator.process(candidate)["source"] == "cache" for candidate in candidates)
+
+
 def test_process_many_hashes_each_candidate_once():
     backend = BatchCountingBackend()
     cache = KeyCountingCache()
@@ -196,3 +215,42 @@ def test_single_candidate_startup_deferral_is_not_cached():
     result = service.process(Candidate('one', PageContext('', top_level_domain='example.test'), width=300, height=250))
     assert result['source'] == 'model_starting'
     assert service.cache.stats()['resident_entries'] == backend.calls == 0
+
+
+def test_startup_failure_preserves_rules_and_recovers_without_caching_failure():
+    class StartupBackend(CountingBackend):
+        phase = "raises"
+
+        def prepare(self, states, question):
+            if self.phase == "raises":
+                raise RuntimeError("test preparation error")
+            return self.phase == "ready"
+
+        def runtime_status(self):
+            return {"phase": self.phase}
+
+    backend = StartupBackend()
+    service = AdBlockOrchestrator(
+        CandidateRanker(), JevDecider(backend), BlockingPolicy(),
+        defer_model_startup=True, max_model_candidates_per_batch=1,
+    )
+    page = PageContext("https://news.test", top_level_domain="news.test")
+    one = Candidate("one", page, element_id="slot-a", width=300, height=250)
+    two = Candidate("two", page, element_id="slot-b", width=300, height=250)
+    rule = Candidate("rule", page, resource_urls=["https://doubleclick.net/ads/banner"])
+
+    failed = service.process_many([one, rule, two])
+    assert [row["source"] for row in failed] == ["model_unavailable", "rules", "model_unavailable"]
+    assert [row["command"]["action"] for row in failed] == ["allow", "block", "allow"]
+    assert service.process(one)["source"] == "model_unavailable"
+    backend.phase = "failed"
+    assert service.process(two)["source"] == "model_unavailable"
+    assert service.cache.stats()["resident_entries"] == 1
+    counts = service.performance_stats()["counters"]
+    assert counts["model_states_submitted"] == counts["startup_deferred_candidates"] == backend.calls == 0
+
+    backend.phase = "warming"
+    assert service.process(one)["source"] == "model_starting"
+    backend.phase = "ready"
+    assert service.process(one)["source"] == "jev"
+    assert backend.calls == 1

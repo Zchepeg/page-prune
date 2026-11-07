@@ -11,7 +11,7 @@ import time
 from collections import deque
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Error as BrowserError, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -106,6 +106,60 @@ class ShadowService(E2EOrchestrator):
         return {'primary':primary,'lightweight_shadow':self.observer.stats() if self.observer else {'enabled':False}}
 
 
+def capture_context(page, item, image):
+    selector = f'[data-jev-shadow-key~="{item["candidate_id"]}"]'
+    try:
+        matches = [frame.locator(selector) for frame in page.frames]
+        matches = [locator for locator in matches if locator.count()]
+        if len(matches) != 1 or matches[0].count() != 1:
+            return 'not_found_or_ambiguous'
+        locator = matches[0]
+        if not locator.is_visible():
+            item['visibility_at_capture'] = locator.evaluate('''element => {
+                const style = getComputedStyle(element);
+                const bounds = element.getBoundingClientRect();
+                let displayNone = false;
+                for (let node = element; node; node = node.parentElement) {
+                    if (getComputedStyle(node).display === 'none') {
+                        displayNone = true;
+                        break;
+                    }
+                }
+                return {width: bounds.width, height: bounds.height, visibility: style.visibility, displayNone};
+            }''', timeout=750)
+            return 'not_visible'
+        locator.scroll_into_view_if_needed(timeout=750)
+        box = locator.bounding_box(timeout=750)
+        viewport = page.viewport_size
+        if not box or not viewport or box['y'] >= viewport['height'] or box['y'] + box['height'] <= 0:
+            return 'outside_viewport'
+        page.screenshot(
+            path=str(image),
+            style=f'{selector} {{ outline: 4px solid #f50 !important; outline-offset: -4px !important; }}',
+            timeout=2000,
+        )
+    except BrowserError as error:
+        return type(error).__name__
+    item['context_screenshot'] = str(image)
+    return 'captured'
+
+
+def collect_evidence(page, service, records, output, seconds, limit=5):
+    deadline = time.monotonic() + seconds
+    while True:
+        with service.lock:
+            outcomes = list(service.review)
+            service.review.clear()
+        for item in outcomes[:max(0, limit - len(records))]:
+            item['context_screenshot'] = ''
+            item['capture_status'] = capture_context(page, item, output / f'review-{len(records)}.png')
+            records.append(item)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return
+        page.wait_for_timeout(min(250, remaining * 1000))
+
+
 def run(output, shadow_enabled, sites=SITES):
     if output.exists():
         raise ValueError('refusing to overwrite shadow run')
@@ -164,50 +218,36 @@ def run(output, shadow_enabled, sites=SITES):
                         page = context.new_page()
                         page.set_default_timeout(5000)
                         row = {'requested_url':url}
+                        records = []
+                        image_dir = output / 'screenshots' / f'page-{index + 1}'
+                        image_dir.mkdir()
                         try:
                             response = page.goto(url,wait_until='domcontentloaded',timeout=12000)
                             row['http_status'] = response.status if response else None
                             if response is None or response.status >= 400:
                                 row['excluded_reason'] = 'http_error_or_missing_response'
                             else:
-                                page.wait_for_timeout(3500)
+                                collect_evidence(page, service_adapter, records, image_dir, 3.5)
                                 row['before'] = page_counts(page)
                                 page.evaluate('window.scrollTo(0,Math.min(1200,document.body.scrollHeight*.4))')
-                                page.wait_for_timeout(2500)
+                                collect_evidence(page, service_adapter, records, image_dir, 2.5)
                                 row['after'] = page_counts(page)
                                 if observer:
                                     row['shadow_drained'] = observer.wait_idle(timeout=5)
-                                with service_adapter.lock:
-                                    outcomes = list(service_adapter.review)
-                                    service_adapter.review.clear()
-                                for item in outcomes[:5]:
-                                    identifier = item['candidate_id']
-                                    selector = f'[data-jev-shadow-key~="{identifier}"]'
-                                    locator = next(
-                                        (match for frame in page.frames if (match := frame.locator(selector)).count() == 1),
-                                        page.locator(selector),
-                                    )
-                                    image = output/'screenshots'/f'review-{len(captured)}.png'
-                                    try:
-                                        locator.screenshot(path=str(image),timeout=1500)
-                                        item['screenshot'] = str(image)
-                                        item['still_visible'] = locator.is_visible()
-                                    except Exception:
-                                        item['screenshot'] = ''
-                                        item['still_visible'] = None
-                                    if item['still_visible']:
-                                        context_image = image.with_name(f'{image.stem}-context.png')
-                                        try:
-                                            page.screenshot(path=str(context_image), style=f'{selector} {{ outline: 4px solid #f50 !important; outline-offset: -4px !important; }}', timeout=2000)
-                                            item['context_screenshot'] = str(context_image)
-                                        except Exception:
-                                            item['context_screenshot'] = ''
-                                    captured.append(item)
+                                collect_evidence(page, service_adapter, records, image_dir, 0)
+                                for item_index, item in enumerate(records):
+                                    if item['capture_status'] != 'captured':
+                                        item['capture_status'] = capture_context(
+                                            page, item, image_dir / f'review-{item_index}.png',
+                                        )
                                 row['shadow_new_actions_sent_to_browser'] = 0
                         except Exception as error:
                             row['error_type'] = type(error).__name__
                         finally:
                             page.close()
+                            with service_adapter.lock:
+                                service_adapter.review.clear()
+                        captured.extend(records)
                         results.append(row)
                         (output/'progress.json').write_text(json.dumps({'pages':len(results),'shadow_enabled':shadow_enabled,'stats':service_adapter.performance_stats()},indent=2),encoding='utf-8')
                         print(json.dumps({'page':index+1,'http_status':row.get('http_status'),'error_type':row.get('error_type'),'shadow_processed':observer.stats()['counters']['processed'] if observer else 0}),flush=True)

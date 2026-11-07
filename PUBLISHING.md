@@ -34,6 +34,9 @@ node --check browser/extension/background.js
 node --check browser/extension/content.js
 node --check browser/extension/newtab.js
 node --check browser/extension/popup.js
+node --check browser/extension/screenshot-background.js
+node --check browser/extension/screenshot-content.js
+node --check browser/extension/screenshot-review.js
 node --check browser/extension/options.js
 node --check browser/extension/probe.js
 node --check browser/extension/privacy_guard.js
@@ -45,7 +48,7 @@ node --check browser/extension/privacy_guard.js
 
 1. 三个静态规则集均成功加载。
 2. 新标签页显示热点榜、搜索框和本地收藏。验证热点日期和离线状态，以及网格导航、添加网址、删除文件夹和刷新后的持久化。
-3. 工具栏弹窗只显示品牌、版本和人工标记按钮。
+3. 工具栏弹窗默认进入人工标记。勾选截图复核后，验证遮盖预览、保存与丢弃，并确认未授予全站权限。
 4. 本地服务关闭时扩展保持 fail-open。
 5. 本地服务开启时模型判断、自动采集和人工标记正常。
 

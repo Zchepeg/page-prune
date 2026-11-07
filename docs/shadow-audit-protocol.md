@@ -44,9 +44,11 @@ SSA 用极低比例审计最终仍被放行、但确定性检测分数处于中�
 
 ## Analysis and review
 
-服务端将探针变化转换为 `probe_score`、`information_value` 和可审计证据。信息价值低于 0.15 的记录只保留审计统计；达到 0.15 的记录进入待复核；达到 0.30 的记录先使用 `probe-ad-classification-v1` 类型化问题进行 Qwen 二次判断，再进入待复核。
+服务端将探针变化转换为 `probe_score`、`information_value` 和可审计证据。信息价值低于 0.15 的记录只保留审计统计。达到 0.15 的新观测进入待复核。达到 0.30 时，服务尝试用 `probe-ad-classification-v1` 进行模型判断。重复观测、模型加载或故障期间会跳过推理，符合条件的新观测仍可进入人工复核。
 
 Qwen 的探针判断是实验性辅助信号，不能改变当前页面动作，也不能直接成为训练标签。待复核记录保存在 `data/training/pending_probe_review.jsonl`，人工结果单独保存在 `data/training/reviewed_probes.jsonl`。本地服务运行时可访问 `http://127.0.0.1:8765/review`，在同一页面复核 SSA 探针与普通浏览器候选。
+
+本地 `GET /v1/status` 的 `probes.outcomes` 按处理路线、模型状态和复核结果分别计数。例如 `model.decided` 是实际得到模型判断的观测数，`model.duplicate_review` 是跳过重复推理的次数，`review.queued` 是进入人工复核的次数。这些计数自服务启动累计，不含域名、探针 ID 或页面内容。它们用于确认探针有没有触发及产生复核记录，无法直接衡量拦截收益。
 
 ## Failure behavior
 

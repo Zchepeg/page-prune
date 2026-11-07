@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import time
 from dataclasses import replace
+from hashlib import sha256
+from math import isclose, isfinite
+from numbers import Real
+from threading import Lock
+from time import monotonic
 
 from collector.sanitizer import sanitize_candidate
 from collector.schemas import Candidate
@@ -22,7 +27,22 @@ from probe.store import ProbeStore
 from probe.types import ProbeRecord
 from runtime.decision_cache import DecisionCache
 from runtime.performance import PerformanceMetrics
+from runtime.state_serialization import serialize_state
 from training.auto_trainer import AutoTrainer
+
+
+MODEL_BATCH_COOLDOWN_SECONDS = 5
+
+
+def _validate_model_decision(decision: Decision, candidate_id: str) -> None:
+    if decision.candidate_id != candidate_id:
+        raise ValueError("model decision candidate does not match request")
+    probabilities = decision.probabilities
+    if probabilities.keys() != {"block", "allow", "uncertain"} or any(
+        not isinstance(value, Real) or isinstance(value, bool) or not isfinite(value) or not 0 <= value <= 1
+        for value in probabilities.values()
+    ) or not isclose(sum(probabilities.values()), 1.0, rel_tol=0.0, abs_tol=0.001):
+        raise ValueError("model returned invalid probabilities")
 
 
 class AdBlockOrchestrator:
@@ -62,6 +82,54 @@ class AdBlockOrchestrator:
         self.max_model_candidates_per_batch = max(1, max_model_candidates_per_batch)
         self.performance = PerformanceMetrics()
         self.defer_model_startup = defer_model_startup
+        self._model_retry_lock = Lock()
+        self._model_retry_at = 0.0
+        self._model_recovering = False
+
+    def _model_cooldown_remaining(self) -> float:
+        with self._model_retry_lock:
+            return max(0.0, self._model_retry_at - monotonic())
+
+    def _claim_model_batch(self) -> float | None:
+        with self._model_retry_lock:
+            if self._model_recovering or monotonic() < self._model_retry_at:
+                return None
+            if self._model_retry_at:
+                self._model_recovering = True
+            return self._model_retry_at
+
+    def _finish_model_batch(self, retry_deadline: float, failed: bool | None) -> None:
+        with self._model_retry_lock:
+            if failed:
+                self._model_retry_at = monotonic() + MODEL_BATCH_COOLDOWN_SECONDS
+            elif failed is False and retry_deadline and retry_deadline == self._model_retry_at:
+                self._model_retry_at = 0.0
+            if retry_deadline:
+                self._model_recovering = False
+
+    def _decision_key(self, candidate, assessment) -> str:
+        state = (
+            self.cache.key(candidate),
+            candidate.text[160:],
+            round(candidate.width, 1),
+            round(candidate.height, 1),
+            assessment.route,
+            assessment.score,
+            assessment.evidence,
+        )
+        return sha256(serialize_state(state).encode("utf-8")).hexdigest()
+
+    def _model_startup(self, requests) -> str | None:
+        if not self.defer_model_startup or not requests:
+            return None
+        try:
+            if self.decider.prepare_many(requests):
+                return None
+            if self.decider.runtime_status().get("phase") != "failed":
+                return "model_starting"
+        except Exception:
+            pass
+        return "model_unavailable"
 
     def process(self, candidate: Candidate, event_sink: list[dict] | None = None) -> dict:
         started = time.perf_counter()
@@ -78,15 +146,18 @@ class AdBlockOrchestrator:
         started = time.perf_counter()
         candidate = sanitize_candidate(candidate, self.max_text, self.max_html)
         assessment = self.ranker.assess(candidate)
-        key = self.cache.key(candidate)
+        key = self._decision_key(candidate, assessment)
         cached = self.cache.get_by_key(key)
         plan = None if cached is not None else self.protocol.plan(assessment)
         prepare_ms = (time.perf_counter()-started)*1000
         self.performance.preparation(prepare_ms, int(cached is not None), int(plan is not None and plan.route is not ProtocolRoute.RULE))
-        starting = bool(self.defer_model_startup and plan is not None and plan.route is not ProtocolRoute.RULE and not self.decider.prepare_many([(candidate.candidate_id, build_state(candidate, assessment.evidence), assessment.evidence)]))
+        startup = None
+        if self.defer_model_startup and plan is not None and plan.route is not ProtocolRoute.RULE:
+            startup = self._model_startup([(candidate.candidate_id, build_state(candidate, assessment.evidence), assessment.evidence)])
+        starting = startup == "model_starting"
         if starting:
             self.performance.startup_deferred(1)
-        return self._process_prepared(candidate, assessment, event_sink=event_sink, cached=cached, plan=plan, cache_key=key, cache_checked=True, model_allowed=not starting, startup_deferred=starting)
+        return self._process_prepared(candidate, assessment, event_sink=event_sink, cached=cached, plan=plan, cache_key=key, cache_checked=True, model_allowed=startup is None, startup_deferred=starting, model_unavailable=startup == "model_unavailable")
 
     def _process_prepared(
         self,
@@ -101,10 +172,11 @@ class AdBlockOrchestrator:
         cache_key: str | None = None,
         cache_checked: bool = False,
         startup_deferred: bool = False,
+        model_unavailable: bool = False,
     ) -> dict:
         started = time.perf_counter()
         if not cache_checked:
-            cache_key = cache_key or self.cache.key(candidate)
+            cache_key = cache_key or self._decision_key(candidate, assessment)
             cached = self.cache.get_by_key(cache_key)
         if cached is not None:
             decision = replace(cached, candidate_id=candidate.candidate_id)
@@ -114,6 +186,9 @@ class AdBlockOrchestrator:
             if plan.route is ProtocolRoute.RULE:
                 decision = self._rule_decision(candidate, assessment, plan)
                 source = "rules"
+            elif model_unavailable:
+                decision = self._model_unavailable_decision(candidate, assessment)
+                source = "model_unavailable"
             elif not model_allowed:
                 decision = self._budget_decision(candidate, assessment, plan, startup_deferred)
                 source = 'model_starting' if startup_deferred else "model_budget"
@@ -124,6 +199,7 @@ class AdBlockOrchestrator:
                     model_failed = True
                     try:
                         model_decision = self.decider.decide(candidate.candidate_id, state, assessment.evidence)
+                        _validate_model_decision(model_decision, candidate.candidate_id)
                         model_failed = False
                     finally:
                         self.performance.model(1, (time.perf_counter()-model_started)*1000, model_failed)
@@ -131,9 +207,10 @@ class AdBlockOrchestrator:
                 decision = resolution.decision
                 source = resolution.source
                 self.disagreements.append(candidate, assessment, resolution)
-        if source not in {"model_budget", 'model_starting'}:
-            self.cache.put_by_key(cache_key or self.cache.key(candidate), decision)
-        capture = self.training_capture.capture(candidate, assessment, decision) if self.training_capture and source != 'model_starting' else None
+        if source not in {"model_budget", "model_starting", "model_unavailable"}:
+            self.cache.put_by_key(cache_key or self._decision_key(candidate, assessment), decision)
+        skip_capture = source in {"model_starting", "model_unavailable"}
+        capture = self.training_capture.capture(candidate, assessment, decision) if self.training_capture and not skip_capture else None
         if capture and capture.saved and self.auto_trainer:
             self.auto_trainer.maybe_start()
         policy_result = self.policy.apply(candidate, decision)
@@ -144,7 +221,7 @@ class AdBlockOrchestrator:
             "decision": decision.to_dict(),
             "source": source,
             "latency_ms": latency_ms,
-            "training_capture": capture.to_dict() if capture else {"saved": False, "reason": 'model_starting' if source == 'model_starting' else "not_configured", "example_id": ""},
+            "training_capture": capture.to_dict() if capture else {"saved": False, "reason": source if skip_capture else "not_configured", "example_id": ""},
             "detector": {
                 "score": round(assessment.score, 6),
                 "route": assessment.route,
@@ -191,6 +268,17 @@ class AdBlockOrchestrator:
             },
         )
 
+    def _model_unavailable_decision(self, candidate: Candidate, assessment) -> Decision:
+        return Decision(
+            candidate_id=candidate.candidate_id,
+            verdict=Verdict.UNCERTAIN,
+            probabilities={"block": 0.0, "allow": 0.0, "uncertain": 1.0},
+            level=DecisionLevel.L0,
+            evidence=assessment.evidence,
+            model_version="model-unavailable-v1",
+            question_version="ad-classification-v1",
+        )
+
     def _rule_decision(
         self,
         candidate: Candidate,
@@ -234,7 +322,7 @@ class AdBlockOrchestrator:
         for index, raw_candidate in enumerate(candidates):
             candidate = sanitize_candidate(raw_candidate, self.max_text, self.max_html)
             assessment = self.ranker.assess(candidate)
-            cache_key = self.cache.key(candidate)
+            cache_key = self._decision_key(candidate, assessment)
             cached = self.cache.get_by_key(cache_key)
             plan = None if cached is not None else self.protocol.plan(assessment)
             prepared.append((candidate, assessment, cached, plan, cache_key))
@@ -258,25 +346,46 @@ class AdBlockOrchestrator:
         ]
         self.performance.preparation((time.perf_counter()-prepare_started)*1000, sum(item[2] is not None for item in prepared), len(model_groups), sum(len(indices)-1 for indices in model_groups.values()), sum(len(indices) for key, indices in ranked_groups if key not in allowed_groups))
         starting_indices = set()
-        if requests and self.defer_model_startup and not self.decider.prepare_many(requests):
-            starting_indices = allowed
-            self.performance.startup_deferred(len(starting_indices))
+        model_failed_indices = set()
+        batch_claim = self._claim_model_batch() if requests else 0.0
+        startup = "model_unavailable" if batch_claim is None else self._model_startup(requests)
+        if startup:
+            if startup == "model_starting":
+                starting_indices = allowed
+                self.performance.startup_deferred(len(starting_indices))
+            else:
+                model_failed_indices = {index for indices in model_groups.values() for index in indices}
             allowed = set()
             requests = []
             duplicate_indices = set()
         model_started = time.perf_counter()
-        model_failed = True
+        model_decisions = {}
+        batch_failed = False
         try:
             batch_decisions = self.decider.decide_many(requests) if requests else []
-            model_failed = False
+            if len(batch_decisions) != len(requests) or any(
+                decision.candidate_id != request[0] for request, decision in zip(requests, batch_decisions)
+            ):
+                raise ValueError("model decisions do not match requests")
+        except Exception:
+            batch_failed = True
+            model_failed_indices = {index for indices in model_groups.values() for index in indices}
+        else:
+            for indices, decision in zip(allowed_groups.values(), batch_decisions):
+                try:
+                    _validate_model_decision(decision, prepared[indices[0]][0].candidate_id)
+                except ValueError:
+                    model_failed_indices.update(indices)
+                    continue
+                for index in indices:
+                    model_decisions[index] = replace(decision, candidate_id=prepared[index][0].candidate_id)
         finally:
+            if batch_claim is not None and (requests or batch_claim):
+                failed = batch_failed or (bool(batch_claim) and not model_decisions) if requests else None
+                self._finish_model_batch(batch_claim, failed)
             if requests:
-                self.performance.model(len(requests), (time.perf_counter()-model_started)*1000, model_failed)
+                self.performance.model(len(requests), (time.perf_counter()-model_started)*1000, bool(model_failed_indices))
         model_latency_ms = (time.perf_counter() - model_started) * 1000
-        model_decisions = {}
-        for (key, indices), decision in zip(allowed_groups.items(), batch_decisions):
-            for index in indices:
-                model_decisions[index] = replace(decision, candidate_id=prepared[index][0].candidate_id)
         results = [
             self._process_prepared(
                 candidate,
@@ -290,6 +399,7 @@ class AdBlockOrchestrator:
                 cache_key,
                 index not in duplicate_indices,
                 index in starting_indices,
+                index in model_failed_indices,
             )
             for index, (candidate, assessment, cached, plan, cache_key) in enumerate(prepared)
         ]
@@ -305,7 +415,7 @@ class AdBlockOrchestrator:
         return self.decider.runtime_status()
 
     def performance_stats(self) -> dict:
-        return {**self.performance.snapshot(), 'cache_lookups': self.cache.stats(), 'defer_model_startup': self.defer_model_startup}
+        return {**self.performance.snapshot(), 'cache_lookups': self.cache.stats(), 'defer_model_startup': self.defer_model_startup, 'model_batch_cooldown_ms': round(self._model_cooldown_remaining() * 1000)}
 
     def record_manual(self, candidate: Candidate, label: int = 0) -> dict:
         candidate = sanitize_candidate(candidate, self.max_text, self.max_html)
@@ -327,23 +437,50 @@ class AdBlockOrchestrator:
         )
         return result.to_dict()
 
+    def _probe_model_decision(self, record, assessment) -> tuple[Decision | None, str]:
+        with self._model_retry_lock:
+            if self._model_retry_at:
+                return None, "model_unavailable"
+        try:
+            if self.defer_model_startup:
+                status = self.decider.runtime_status()
+                if status.get("phase") == "failed":
+                    return None, "model_unavailable"
+                if status.get("ready") is False:
+                    return None, "model_starting"
+            state = self.probe_analyzer.build_state(record, assessment)
+            decision = self.decider.decide(record.probe_id, state, assessment.evidence, PROBE_AD_TREATMENT)
+            _validate_model_decision(decision, record.probe_id)
+        except Exception:
+            return None, "model_unavailable"
+        return decision, "decided"
+
     def record_probe(self, value: dict) -> dict:
         if not self.probe_store.enabled:
             return self.probe_store.append(value)
         record = ProbeRecord.from_dict(value)
         assessment = self.probe_analyzer.assess(record)
-        decision = None
-        if assessment.route == "model":
-            state = self.probe_analyzer.build_state(record, assessment)
-            decision = self.decider.decide(record.probe_id, state, assessment.evidence, PROBE_AD_TREATMENT)
         stored = self.probe_store.append(value)
+        decision = None
+        model_status = "not_requested"
         review = {"queued": False, "reason": "discarded", "review_id": ""}
+
+        def decide():
+            if assessment.route == "model":
+                return self._probe_model_decision(record, assessment)
+            return None, "not_requested"
+
         if assessment.route != "discard" and self.probe_reviews:
-            review = self.probe_reviews.queue(record, assessment, decision)
+            review, decision, model_status = self.probe_reviews.queue_with_decision(record, assessment, decide)
+        elif assessment.route == "model":
+            decision, model_status = decide()
+        review_status = review["reason"] if assessment.route == "discard" or self.probe_reviews else "not_configured"
+        self.probe_store.record_outcome(assessment.route, model_status, review_status)
         return {
             **stored,
             "analysis": assessment.to_dict(),
             "decision": decision.to_dict() if decision else None,
+            "model_status": model_status,
             "review": review,
         }
 

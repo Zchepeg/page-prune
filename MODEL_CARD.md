@@ -1,4 +1,4 @@
-# JEV Ad Blocker Qwen Decision Model
+# PagePrune Qwen Decision Model
 
 ## Model summary
 

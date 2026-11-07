@@ -1,3 +1,5 @@
+import "./screenshot-background.js";
+
 const SERVICE_ROOT = "http://127.0.0.1:8765";
 const DECISIONS_URL = `${SERVICE_ROOT}/v1/decisions`;
 const STATUS_URL = `${SERVICE_ROOT}/v1/status`;

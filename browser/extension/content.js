@@ -1,3 +1,11 @@
+const COMPACT_SLOT_MARKERS = ["dfp", "adslot", "adunit", "adtolist"];
+const COMPACT_SLOT_SELECTORS = COMPACT_SLOT_MARKERS.flatMap((marker) => [
+  `[id='${marker}' i]`, `[class~='${marker}' i]`,
+  ...["-", "_"].flatMap((separator) => {
+    const prefix = marker + separator;
+    return [`[id^='${prefix}' i]`, `[class^='${prefix}' i]`, `[class*=' ${prefix}' i]`];
+  }),
+]);
 const SELECTORS = [
   "[id*='ad-']", "[id^='ad_']", "[id*='advert']", "[id^='google_ads']",
   "[class*=' ad-']", "[class^='ad-']", "[class*='ad_']", "[class*='_ad_']",
@@ -6,9 +14,10 @@ const SELECTORS = [
   "[aria-label*='advert' i]", "[aria-label*='sponsor' i]",
   "script[src]", "img[src*='pixel' i]", "img[width='1']", "img[height='1']",
   "iframe[src]", "aside", "[data-ad]", "[data-ad-slot]", "[data-ad-client]",
-  "[data-ad-unit]", "[data-google-query-id]"
+  "[data-ad-unit]", "[data-google-query-id]", ...COMPACT_SLOT_SELECTORS
 ];
 const SELECTOR = SELECTORS.join(",");
+const COMPACT_SLOT_SELECTOR = COMPACT_SLOT_SELECTORS.join(",");
 const CONTROL_SELECTOR = "article,main,nav,header,footer,section,[role='main'],[role='navigation']";
 const PROTECTED_CONTROL_SELECTOR = [
   "main", "nav", "search", "[role='main']", "[role='navigation']", "[role='search']", "[role='searchbox']",
@@ -16,7 +25,6 @@ const PROTECTED_CONTROL_SELECTOR = [
 ].join(",");
 const scanState = new WeakMap();
 const automaticHides = new WeakMap();
-const nodesById = new Map();
 const pendingRoots = new Set();
 const MAX_CANDIDATES_PER_SCAN = 80;
 const MAX_DISCOVERED_PER_SCAN = 400;
@@ -30,6 +38,7 @@ let pageRevision = 0;
 let scanTimer = null;
 let scanDue = 0;
 let scanDeadline = 0;
+let overflowScanAfter = 0;
 let picker = null;
 let controlSamplesSent = 0;
 
@@ -115,7 +124,8 @@ function candidatePriority(element, current) {
     .map((name) => element.getAttribute?.(name) || "").join(" ").toLowerCase();
   const urls = current.urls.join(" ").toLowerCase();
   let score = 0;
-  if (/(^|[-_\s])(ad|ads|advert|advertisement|sponsor|sponsored|promoted)([-_\s]|$)/i.test(identity)) score += 6;
+  if (/(^|[-_\s])(ad|ads|advert|advertisement|sponsor|sponsored|promoted)([-_\s]|$)/i.test(identity) ||
+      element.matches(COMPACT_SLOT_SELECTOR)) score += 6;
   if (/(advert|sponsor|promoted|广告|推广)/i.test(attributes)) score += 5;
   if (/(doubleclick|googlesyndication|adservice|adserver|\/ads?[\/_.?=-]|pixel)/i.test(urls)) score += 5;
   if (element.tagName === "IFRAME") score += 2;
@@ -158,7 +168,6 @@ function selectCandidates(discovered) {
 
 function serialize(element, current, collectionStratum = "targeted") {
   const candidateId = `jev-${Date.now()}-${sequence++}`;
-  nodesById.set(candidateId, element);
   return {
     candidate_id: candidateId,
     page: { url: current.pageUrl, title: document.title.slice(0, 160), top_level_domain: location.hostname },
@@ -195,7 +204,7 @@ function hideElement(element, reason, automatic = false) {
   element.dataset.jevBlocked = reason;
   element.style.setProperty("display", "none", "important");
   const current = snapshot(element);
-  scanState.set(element, current.fingerprint);
+  scanState.set(element, { fingerprint: current.fingerprint });
   if (automatic) automaticHides.set(element, { ...previous, identity: current.identity });
   else automaticHides.delete(element);
 }
@@ -213,15 +222,18 @@ function restoreReusedElement(element, identity) {
   return true;
 }
 
-function applyCommand(result) {
-  const command = result?.command;
-  if (!command) return;
-  const element = nodesById.get(command.candidate_id);
-  nodesById.delete(command.candidate_id);
-  if (!element || !element.isConnected) return;
-  if (command.action === "block" || command.action === "hide") {
-    hideElement(element, command.reason, true);
-  }
+function retryCandidates(entries, delay) {
+  if (!entries.length) return;
+  setTimeout(() => {
+    let retry = false;
+    for (const entry of entries) {
+      if (!entry.element.isConnected || scanState.get(entry.element) !== entry.state) continue;
+      scanState.delete(entry.element);
+      pendingRoots.add(entry.element);
+      retry = true;
+    }
+    if (retry) scheduleScan();
+  }, delay);
 }
 
 function scan(roots = [document]) {
@@ -243,7 +255,7 @@ function scan(roots = [document]) {
     visited.add(element);
     let current = snapshot(element, styleOf, pageUrl);
     if (restoreReusedElement(element, current.identity)) current = snapshot(element, styleOf, pageUrl);
-    if ((stratum === "control" && !current.visible) || scanState.get(element) === current.fingerprint) return false;
+    if ((stratum === "control" && !current.visible) || scanState.get(element)?.fingerprint === current.fingerprint) return false;
     discovered.push({ element, current, stratum, priority: candidatePriority(element, current) });
     return true;
   };
@@ -270,93 +282,64 @@ function scan(roots = [document]) {
     }
   }
   const entries = selectCandidates(discovered).map(({ element, current, stratum }) => {
-    scanState.set(element, current.fingerprint);
-    return { element, candidate: serialize(element, current, stratum), fingerprint: current.fingerprint };
+    const state = { fingerprint: current.fingerprint };
+    scanState.set(element, state);
+    return { element, candidate: serialize(element, current, stratum), state };
   });
   if (!entries.length) return;
+  const hasOverflow = discovered.length > entries.length;
 
   const candidates = entries.map((entry) => entry.candidate);
   try {
     chrome.runtime.sendMessage({ type: "JEV_CLASSIFY", candidates }, (response) => {
       const runtimeError = chrome.runtime.lastError?.message;
       if (runtimeError || !response?.ok) {
-        for (const { element, candidate } of entries) {
-          nodesById.delete(candidate.candidate_id);
-        }
-        setTimeout(() => {
-          for (const { element } of entries) {
-            if (!element.isConnected) continue;
-            scanState.delete(element);
-            pendingRoots.add(element);
-          }
-          scheduleScan();
-        }, RETRY_INTERVAL_MS);
+        retryCandidates(entries, RETRY_INTERVAL_MS);
         console.warn("JEV classifier unavailable; page left unchanged:", runtimeError || response?.error);
         return;
       }
-      const completed = new Set();
       const deferredEntries = [];
       const unavailableEntries = [];
       const entriesById = new Map(entries.map((entry) => [entry.candidate.candidate_id, entry]));
       for (const result of response.results || []) {
-        completed.add(result?.command?.candidate_id);
-        const entry = entriesById.get(result?.command?.candidate_id);
-        if (entry && result?.source === "model_unavailable") {
-          nodesById.delete(entry.candidate.candidate_id);
+        const command = result?.command;
+        const entry = entriesById.get(command?.candidate_id);
+        if (!entry) continue;
+        entriesById.delete(command.candidate_id);
+        if (!entry.element.isConnected || scanState.get(entry.element) !== entry.state) continue;
+        if (result.source === "model_unavailable") {
           unavailableEntries.push(entry);
           continue;
         }
-        if (entry && (result?.source === "model_starting" || result?.source === "model_budget" || result?.decision?.diagnostics?.model_loading_deferred || result?.decision?.diagnostics?.model_budget_deferred)) {
-          nodesById.delete(entry.candidate.candidate_id);
+        if (result.source === "model_starting" || result.source === "model_budget" || result.decision?.diagnostics?.model_loading_deferred || result.decision?.diagnostics?.model_budget_deferred) {
           deferredEntries.push(entry);
           continue;
         }
-        const action = result?.command?.action;
-        if (entry && (action === "block" || action === "hide") &&
-            (!entry.element.isConnected || snapshot(entry.element).fingerprint !== entry.fingerprint)) {
-          nodesById.delete(entry.candidate.candidate_id);
-          if (entry.element.isConnected && scanState.get(entry.element) === entry.fingerprint) {
-            scanState.delete(entry.element);
-            pendingRoots.add(entry.element);
-          }
-          continue;
-        }
-        if (entry && globalThis.JEVShadowProbe) {
-          globalThis.JEVShadowProbe.consider(entry.element, entry.candidate, result).catch(() => undefined);
-        }
-        applyCommand(result);
-      }
-      for (const [retryEntries, delay] of [
-        [deferredEntries, DEFERRED_RETRY_INTERVAL_MS],
-        [unavailableEntries, RETRY_INTERVAL_MS]
-      ]) {
-        if (!retryEntries.length) continue;
-        setTimeout(() => {
-          let retry = false;
-          for (const entry of retryEntries) {
-            if (!entry.element.isConnected || scanState.get(entry.element) !== entry.fingerprint) continue;
-            scanState.delete(entry.element);
-            pendingRoots.add(entry.element);
-            retry = true;
-          }
-          if (retry) scheduleScan();
-        }, delay);
-      }
-      for (const candidate of candidates) {
-        if (completed.has(candidate.candidate_id)) continue;
-        const entry = entriesById.get(candidate.candidate_id);
-        nodesById.delete(candidate.candidate_id);
-        if (entry?.element?.isConnected) {
+        const shouldHide = command.action === "block" || command.action === "hide";
+        if (shouldHide && snapshot(entry.element).fingerprint !== entry.state.fingerprint) {
           scanState.delete(entry.element);
           pendingRoots.add(entry.element);
+          continue;
+        }
+        if (globalThis.JEVShadowProbe) {
+          globalThis.JEVShadowProbe.consider(entry.element, entry.candidate, result).catch(() => undefined);
+        }
+        if (shouldHide) hideElement(entry.element, command.reason, true);
+      }
+      retryCandidates(deferredEntries, DEFERRED_RETRY_INTERVAL_MS);
+      retryCandidates([...unavailableEntries, ...entriesById.values()], RETRY_INTERVAL_MS);
+      if (hasOverflow && !deferredEntries.length && !unavailableEntries.length && !entriesById.size &&
+          performance.now() >= overflowScanAfter) {
+        overflowScanAfter = performance.now() + FULL_SCAN_INTERVAL_MS;
+        for (const root of roots) {
+          if (root === document || root.isConnected) pendingRoots.add(root);
         }
       }
-      if (pendingRoots.size) scheduleScan(null, 1000);
+      if (pendingRoots.size && scanTimer === null) scheduleScan(null, 1000);
     });
   } catch (error) {
-    for (const { element, candidate } of entries) {
-      scanState.delete(element);
-      nodesById.delete(candidate.candidate_id);
+    for (const { element, state } of entries) {
+      if (scanState.get(element) === state) scanState.delete(element);
     }
     console.warn("JEV extension context unavailable:", error);
   }
@@ -473,7 +456,6 @@ function startPicker() {
     event.stopImmediatePropagation();
     const current = snapshot(element);
     const candidate = serialize(element, current, "manual");
-    nodesById.delete(candidate.candidate_id);
     document.removeEventListener("mouseover", state.onHover, true);
     document.removeEventListener("click", state.onClick, true);
     document.removeEventListener("keydown", state.onKey, true);
